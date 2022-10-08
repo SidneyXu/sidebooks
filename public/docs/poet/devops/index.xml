@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Devops on 编程之诗</title>
+    <link>http://example.org/docs/poet/devops/</link>
+    <description>Recent content in Devops on 编程之诗</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language><atom:link href="http://example.org/docs/poet/devops/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Linux</title>
+      <link>http://example.org/docs/poet/devops/linux/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/docs/poet/devops/linux/</guid>
+      <description>Linux #  网络请求分析 #  tcpdump
+上下文切换监控 #   vnstat pidstat  以上两者都属于sysstat包，MAC不可用。
+  wireshark：事件记录形式
+  tcpdump
+  CPU相关 #  top
+按CPU利用率排序，按q退出交互
+top -o cpu 内存相关 #  vmstat
+vmstat &amp;lt;interval&amp;gt; &amp;lt;count&amp;gt;   r：在运行队列中等待执行的进程数；一般每颗CPU的运行队列应控制在3以内； b：在等待I/O的进程数；此时CPU处于空闲状态，所以应越小越好； free：空闲的物理内存(kb) si：从磁盘交换到内存的swap页数量（kb/sec）；当内存满足时是不应该出现大量交换页的； so：从内存交换到磁盘的swap页数量（kb/sec） cs：每秒上下文切换次数 us：用户进程的CPU时间占比 sy：系统进程的CPU时间占比 id：CPU空闲时间占比 wa：等待I/O的CPU时间占比；过高证明瓶颈在I/O而不是CPU资源；  网络相关 #  netstat
+磁盘相关 #  iostat
+iostat &amp;lt;interval&amp;gt; &amp;lt;count&amp;gt; -tx 报告每秒向终端读取和写入的字符数和CPU的详细信息
+  %user：CPU处在用户模式下的时间百分比。 %nice：CPU处在带NICE值的用户模式下的时间百分比。 %system：CPU处在系统模式下的时间百分比。 %iowait：CPU等待输入输出完成时间的百分比。过高表示I/O存在瓶颈； %steal：管理程序维护另一个虚拟处理器时，虚拟CPU的无意识等待时间百分比。 %idle：CPU空闲时间百分比。如果%idle值高但系统响应慢时，有可能是CPU等待分配内存，此时应加大内存容量。如果持续低于10，那么系统的CPU处理能力相对较低，表明系统中最需要解决的资源是CPU。 Device：磁盘名称 tps：每秒I/O请求数 kb_read/s：每秒读取的block数。 kb_read：读取的block总数。  sar #  基本概念 #  需安装sysstat包。查看使用方法如下：</description>
+    </item>
+    
+    <item>
+      <title>代码管理</title>
+      <link>http://example.org/docs/poet/devops/code/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/docs/poet/devops/code/</guid>
+      <description>代码管理 #  分支管理 #  特性分支模式 #   建立多个特性分支feature/001，在特性分支上进行开发 完成开发后，主干拉出发布分支release/001 将需要发布的特性分支合并到发布分支上 上线后，发布分支合并到主干，添加标签，删除发布分支和特性分支 如果某个功能临时不需要，可以从主干上拉出新的发布分支，进行合并  主干开发模式 #   在主干上拉出开发分支dev/001，在开发分支上进行开发 完成开发后，主干拉出发布分支release/001 将开发分支合并到发布分支上 上线后，将发布分支合并到主干，添加标签，删除发布分支和开发分支  代码检查 #  CheckStyle、FindBugs、Sonar
+代码质量 #   代码规约；规范必要注释，用于梳理思维；IDE Format，持续集成Checkstyle、FindBugs；复杂逻辑工具类单元测试； 给予思考时间不随便压缩工期；Review代码；  持续集成 #   持续集成 jenkins+snoarqube+nexus  </description>
+    </item>
+    
+    <item>
+      <title>日志管理</title>
+      <link>http://example.org/docs/poet/devops/log/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/docs/poet/devops/log/</guid>
+      <description>日志管理 #  </description>
+    </item>
+    
+  </channel>
+</rss>

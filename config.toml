@@ -8,10 +8,10 @@
 
 baseURL = 'http://example.org/'
 languageCode = 'en-us'
-title = 'My New Hugo Site'
+title = '编程之诗'
 
 # (Optional) Set this to true if you use capital letters in file names
-# disablePathToLower = true
+disablePathToLower = true
 
 # (Optional) Set this to true to enable 'Last Modified by' date and git author
 #  information on 'doc' type pages.
@@ -28,12 +28,7 @@ enableGitInfo = true
 
   # (Optional, default none) Set the path to a logo for the book. If the logo is
   # /static/logo.png then the path would be 'logo.png'
-  BookLogo = 'logo.png'
-
-  # (Optional, default none) Set leaf bundle to render as side menu
-  # When not specified file structure and weights will be used
-  # Deprecated, to be removed in June 2022
-  BookMenuBundle = '/menu'
+  BookLogo = 'logo.jpeg'
 
   # (Optional, default docs) Specify section of content to render as menu
   # You can also set value to "*" to render all sections to menu
@@ -41,7 +36,7 @@ enableGitInfo = true
 
   # Set source repository location.
   # Used for 'Last Modified' and 'Edit this page' links.
-  BookRepo = 'https://github.com/alex-shpak/hugo-book'
+  # BookRepo = 'https://github.com/alex-shpak/hugo-book'
 
   # Specifies commit portion of the link to the page's last modified commit hash for 'doc' page
   # type.
@@ -53,7 +48,7 @@ enableGitInfo = true
   # Enable 'Edit this page' links for 'doc' page type.
   # Disabled by default. Uncomment to enable. Requires 'BookRepo' param.
   # Path must point to the site directory.
-  BookEditPath = 'edit/master/exampleSite'
+  # BookEditPath = 'edit/master/exampleSite'
 
   # (Optional, default January 2, 2006) Configure the date format used on the pages
   # - In git information

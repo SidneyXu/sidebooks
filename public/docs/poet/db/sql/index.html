@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="数据库 #  知识点 #  MySQL
+  优化手段
+  优化SQL语句。
+ 基于搜索条件添加合适的索引。 只在索引上排序。 加缓存。 分表分库。 避免空值判断。 控制表的字段数量，默认小于16全排序，大小16为rowId排序。 小事务。 select &#43; 必要字段。 当只要一行数据时使用LIMIT 1。MySQL数据库引擎会在查找到一条数据后停止搜索，而不是继续往后查询下一条符合条件的数据记录。    增加buffer_pool的大小到物理内存的60%-80%。
+  增加buffer_pool实例的个数。
+  根据读写性能调整io_threads的个数。
+  增加change_buffer的大小。
+  增加redo log buffer的大小，会增加丢数据的风险。
+  增加binlog在page cache上的保存次数，会增加丢数据的风险。
+  调整脏页的刷盘速度，使其符合磁盘IOPS。
+    最佳实践 #   索引创建  列的区别度越高索引收益越大。查看区分度的方法为 SELECT COUNT(DISTINCT col_name)/COUNT(*) FROM table_name。 在单个索引就能实现查询效果的同时，也可以再建一个联合索引来实现覆盖索引，以便提高查询性能。   SQL语句  先写insert语句，再写影响并发度的update语句；因为行锁虽然只在必要时才会加上，但是在事务结束时才会被释放。 count操作优先使用count(*)。count(*)有优化，不需要写入1后统计1的数量。    Oracle Client">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="color-scheme" content="light dark"><meta property="og:title" content="关系型数据库" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="http://example.org/docs/poet/db/sql/" />
+
+<title>关系型数据库 | 编程之诗</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.c58292d36b18b675680ab9baea2029204537b839ea72f258746ec0f32ce8d6c8.css" integrity="sha256-xYKS02sYtnVoCrm66iApIEU3uDnqcvJYdG7A8yzo1sg=" crossorigin="anonymous">
+  <script defer src="/flexsearch.min.js"></script>
+  <script defer src="/en.search.min.8a55d5d9141238c9e2edb39b1b570a9123c99ae6d8dea771e1b67e2a27c9c36a.js" integrity="sha256-ilXV2RQSOMni7bObG1cKkSPJmubY3qdx4bZ&#43;KifJw2o=" crossorigin="anonymous"></script>
+
+  <script defer src="/sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk=" crossorigin="anonymous"></script>
+<link rel="alternate" type="application/rss+xml" href="http://example.org/docs/poet/db/sql/index.xml" title="编程之诗" />
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/"><img src="/logo.jpeg" alt="Logo" /><span>编程之诗</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/docs/poet/" class="">服务端技术</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-3dc0bcdeacac2d09e305588c01af0eb9" class="toggle"  />
+    <label for="section-3dc0bcdeacac2d09e305588c01af0eb9" class="flex justify-between">
+      <a href="/docs/poet/loadbalance/" class="">负载均衡与反向代理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/loadbalance/nginx/" class="">Nginx</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-a4c0e00f472ffb291f5ccb931cf17910" class="toggle"  />
+    <label for="section-a4c0e00f472ffb291f5ccb931cf17910" class="flex justify-between">
+      <a href="/docs/poet/server/" class="">Web服务器</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server/tomcat/" class="">Tomcat</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-6a989a0f7154c0e30fc000173d18d159" class="toggle"  />
+    <label for="section-6a989a0f7154c0e30fc000173d18d159" class="flex justify-between">
+      <a href="/docs/poet/config/" class="">配置管理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/config/apollo/" class="">Apollo</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-0d7503870886eef7e4a90589c51e6702" class="toggle"  />
+    <label for="section-0d7503870886eef7e4a90589c51e6702" class="flex justify-between">
+      <a href="/docs/poet/discovery/" class="">服务发现</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/discovery/eureka/" class="">Eureka</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ea19dd2dad634391640e3eabea4a79a7" class="toggle"  />
+    <label for="section-ea19dd2dad634391640e3eabea4a79a7" class="flex justify-between">
+      <a href="/docs/poet/gateway/" class="">网关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/gateway/spring-cloud-gateway/" class="">Spring Cloud Gateway</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-267bf1dbb24070fe23f16066764ac3e6" class="toggle"  />
+    <label for="section-267bf1dbb24070fe23f16066764ac3e6" class="flex justify-between">
+      <a href="/docs/poet/tolerance/" class="">服务容错</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/tolerance/hystrix/" class="">Hystrix</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/tolerance/sentinel/" class="">Sentinel</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1566bed1759084fe25fbedde211ab5f4" class="toggle"  />
+    <label for="section-1566bed1759084fe25fbedde211ab5f4" class="flex justify-between">
+      <a href="/docs/poet/server_framework/" class="">服务框架</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/dubbo/" class="">Dubbo</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/springboot/" class="">SpringBoot</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/" class="">异步编程</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/vertx/" class="">Vert.x</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/future/" class="">CompletableFuture</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/rxjava/" class="">RxJava</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-10b9a0cd112515f14ad77b17e9cd35d6" class="toggle"  />
+    <label for="section-10b9a0cd112515f14ad77b17e9cd35d6" class="flex justify-between">
+      <a href="/docs/poet/job/" class="">任务调度</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/job/xxljob/" class="">XXL-Job</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-c668b765ae16f6575e8402e851bad064" class="toggle" checked />
+    <label for="section-c668b765ae16f6575e8402e851bad064" class="flex justify-between">
+      <a role="button" class="">数据库</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/sql/" class="active">关系型数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/sql/mysql/" class="">MySQL</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/docsql/" class="">文档型数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/docsql/mongodb/" class="">MongoDB</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/colsql/" class="">列式数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/colsql/cassandra/" class="">Cassandra</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/fullsql/" class="">全文数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/fullsql/es/" class="">ElastisSearch</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/cache/" class="">缓存</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/cache/redis/" class="">Redis</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/appcache/" class="">应用内缓存</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/dbproxy/" class="">数据库中间件</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-4194a62f2f6ac00c0aad913c39e3bd62" class="toggle"  />
+    <label for="section-4194a62f2f6ac00c0aad913c39e3bd62" class="flex justify-between">
+      <a href="/docs/poet/mq/" class="">消息中间件</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/mq/kafka/" class="">Kafka</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-d6892adfc8e66be03d32b33aaec13217" class="toggle"  />
+    <label for="section-d6892adfc8e66be03d32b33aaec13217" class="flex justify-between">
+      <a href="/docs/poet/bigdata/" class="">大数据</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-6603b0b9c0113595b4be27635898f9b2" class="toggle"  />
+    <label for="section-6603b0b9c0113595b4be27635898f9b2" class="flex justify-between">
+      <a href="/docs/poet/test/" class="">测试与性能分析</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/benchmark/" class="">压力测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/jmh/" class="">基准测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/cpu/" class="">CPU和线程的性能分析</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/memory/" class="">内存和硬盘的性能分析</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/jvm/" class="">JVM的性能分析</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f257b7f175f4a36b9a290ec1d949339d" class="toggle"  />
+    <label for="section-f257b7f175f4a36b9a290ec1d949339d" class="flex justify-between">
+      <a href="/docs/poet/devops/" class="">Devops</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/linux/" class="">Linux</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/code/" class="">代码管理</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/log/" class="">日志管理</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="/posts/" >
+        Blog
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>关系型数据库</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#知识点">知识点</a></li>
+    <li><a href="#最佳实践">最佳实践</a></li>
+    <li><a href="#heading"></a></li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="数据库">
+  数据库
+  <a class="anchor" href="#%e6%95%b0%e6%8d%ae%e5%ba%93">#</a>
+</h1>
+<h2 id="知识点">
+  知识点
+  <a class="anchor" href="#%e7%9f%a5%e8%af%86%e7%82%b9">#</a>
+</h2>
+<p>MySQL</p>
+<ul>
+<li>
+<p>优化手段</p>
+<ul>
+<li>
+<p>优化SQL语句。</p>
+<ul>
+<li>基于搜索条件添加合适的索引。</li>
+<li>只在索引上排序。</li>
+<li>加缓存。</li>
+<li>分表分库。</li>
+<li>避免空值判断。</li>
+<li>控制表的字段数量，默认小于16全排序，大小16为rowId排序。</li>
+<li>小事务。</li>
+<li>select + 必要字段。</li>
+<li>当只要一行数据时使用LIMIT 1。MySQL数据库引擎会在查找到一条数据后停止搜索，而不是继续往后查询下一条符合条件的数据记录。</li>
+</ul>
+</li>
+<li>
+<p>增加buffer_pool的大小到物理内存的60%-80%。</p>
+</li>
+<li>
+<p>增加buffer_pool实例的个数。</p>
+</li>
+<li>
+<p>根据读写性能调整io_threads的个数。</p>
+</li>
+<li>
+<p>增加change_buffer的大小。</p>
+</li>
+<li>
+<p>增加redo log buffer的大小，会增加丢数据的风险。</p>
+</li>
+<li>
+<p>增加binlog在page cache上的保存次数，会增加丢数据的风险。</p>
+</li>
+<li>
+<p>调整脏页的刷盘速度，使其符合磁盘IOPS。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="最佳实践">
+  最佳实践
+  <a class="anchor" href="#%e6%9c%80%e4%bd%b3%e5%ae%9e%e8%b7%b5">#</a>
+</h2>
+<ul>
+<li>索引创建
+<ul>
+<li>列的区别度越高索引收益越大。查看区分度的方法为 <code>SELECT COUNT(DISTINCT col_name)/COUNT(*) FROM table_name</code>。</li>
+<li>在单个索引就能实现查询效果的同时，也可以再建一个联合索引来实现覆盖索引，以便提高查询性能。</li>
+</ul>
+</li>
+<li>SQL语句
+<ul>
+<li>先写insert语句，再写影响并发度的update语句；因为行锁虽然只在必要时才会加上，但是在事务结束时才会被释放。</li>
+<li>count操作优先使用<code>count(*)</code>。<code>count(*)</code>有优化，不需要写入1后统计1的数量。</li>
+</ul>
+</li>
+</ul>
+<p>Oracle Client</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yml" data-lang="yml"><span style="display:flex;"><span><span style="color:#ae81ff">loginTimeout=3000</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">checkoutTimeout=30000</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">preferredTestQuery=select 1 from dual</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">idleConnectionTestPeriod=10000</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">testConnectionOnCheckout=true</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">minPoolSize=5</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">maxPoolSize=15</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">initialPoolSize=1</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">acquireIncrement=1</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">acquireRetryAttempt=30</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">acquireRetryDelay=1000</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">maxIdleTime=25000</span>
+</span></span></code></pre></div><p>MySQL Server</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yml" data-lang="yml"><span style="display:flex;"><span><span style="color:#75715e"># 连接数</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 服务器响应的最大连接数值（Max_used_connections）占服务器上限连接数值（max_connections）的比例值在10%以上，理想85%。5.7版本中默认是151， 最大可以达到16384。</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 如果只有一台服务器，且Tomcat设置的最大线程池缺省值200，假设每个线程会用到一个数据库连接，那么线程池大小应该小于等于200。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">max_connections=5050</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># redo log</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## redo log每次都直接持久化到磁盘。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">innodb_flush_log_at_trx_commit=1</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## redo log buffer大小，默认为8MB。调高可减少磁盘写入次数。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">innodb_log_buffer_size</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## redo log日志大小</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">innodb_log_file_size=1G</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># binlog</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## binlog格式设为row。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">binlog=row</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 1表示binlog每次都直接持久化到磁盘。提高性能时可设为100-1000。</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 该配置表示每次提交事务都write到文件系统的page cache，累计N个事务后才fsync到磁盘上。</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## page cache是Linux的机制，MySQL重启这部分数据还在，但Linux重启数据就没了。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">sync_binlog=1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># buffer pool、change_buffer</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## buffer_pool大小，默认为128M。调大时可以显著提升系统性能，但是太大会引起页Swap。</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 通过SHOW GLOBAL STATUS LIKE &#39;innodb%read%&#39;;语句计算缓冲池的命中率</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 命中率=(1-innodb_buffer_pool_reads/innodb_buffer_pool_read_request)*100</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 如果池大小已经到达了物理内存的80%但命中率还很低，就需要调整物理内存大小。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">innodb_buffer_pool_size=物理内存的60%-80%间。</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 50表示change_buffer占buffer pool的一半。</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 使用机械硬盘和存放历史数据的库使用change_buffer时收益很大，应该将其尽量增大。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">innodb_change_buffer_max_size=50</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## buffer_pool由多少个实例组成，可以减少竞争。只有innodb_buffer_pool_size&gt;1G才生效，默认值为8。</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 大小不超过 innodb_read_io_threads + innodb_write_io_threads 之和</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">innodb_buffer_pool_instances</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## buffer_pool实例的读写线程数，和与实例数相等性能最优</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## SHOW GLOBAL STATUS LIKE &#39;Com_select&#39;;//读取数量</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## SHOW GLOBAL STATUS WHERE Variable_name IN (&#39;Com_insert&#39;, &#39;Com_update&#39;, &#39;Com_replace&#39;, &#39;Com_delete&#39;);//写入数量</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 读大于写，则读线程多一些，否则反之。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">innodb_read_io_threads</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">innodb_write_io_threads</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 脏页</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 控制脏页的刷盘速度。应确保缓冲池中的脏页比例始终小于75%。</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 脏页太多会导致刷盘时间过长，影响查询时间。当数据从磁盘上载入到buffer_pool时，buffer_pool需要新开一个数据页，如果是干净页则直接释放该页数据继续使用。脏页证明内存和磁盘上数据不一致，需要先刷盘。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">innodb_io_capacity=磁盘的IOPS</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## SSD时设置，表示刷脏页时只刷当前页即可，为1表示当旁边也是脏页时则一起刷盘。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">innodb_flush_neighbors=0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 集群配置</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 并行复制时，在32核备库上设置为8到16，该值控制多少线程处理relaylog日志。提高该值可以缓解主备延迟，但需要留出CPU供备库的查询功能。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">slave_parallel_workers=8或16</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 半同步复制</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### 表示至少等待数据复制到几个从节点再返回。这个数量配置的越大，丢数据的风险越小，但是集群的性能和可用性就越差。最大可以配置成和从节点的数量一样，这样就变成了同步复制。一般配成默认值 1 也就够了。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">rpl_semi_sync_master_wait_slave_count</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### 主库提交事务的线程等待复制的时间超时了，这种情况下事务仍然会被正常提交。并且，MySQL 会自动降级为异步复制模式，直到有足够多（rpl_semi_sync_master_wait_no_slave）的从库追上主库，才能恢复成半同步复制。如果这个期间主库宕机，仍然存在丢数据的风险。</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 控制主库执行事务的线程，是在提交事务之前（AFTER_SYNC）等待复制，还是在提交事务之后（AFTER_COMMIT）等待复制。默认是 AFTER_SYNC，也就是先等待复制，再提交事务，这样完全不会丢数据。AFTER_COMMIT 具有更好的性能，不会长时间锁表，但是存在丢数据的风险。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">rpl_semi_sync_master_wait_point</span>
+</span></span></code></pre></div><p>磁盘TB级别，则将redo log设为4个文件，每个1GB。</p>
+<p>磁盘IOPS测试</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>fio -filename<span style="color:#f92672">=</span>$filename -direct<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> -iodepth <span style="color:#ae81ff">1</span> -thread -rw<span style="color:#f92672">=</span>randrw -ioengine<span style="color:#f92672">=</span>psync -bs<span style="color:#f92672">=</span>16k -size<span style="color:#f92672">=</span>500M -numjobs<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span> -runtime<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span> -group_reporting -name<span style="color:#f92672">=</span>mytest
+</span></span></code></pre></div><p>Java Client</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yml" data-lang="yml"><span style="display:flex;"><span><span style="color:#ae81ff">对于数据库连接池，根据我的经验，一般在线上我建议最小连接数控制在 10 左右，最大连接数控制在 20～30 左右即可。</span>
+</span></span></code></pre></div><h2 id="heading">
+  
+  <a class="anchor" href="#heading">#</a>
+</h2>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+
+
+  <script>(function(){function e(n){const e=window.getSelection(),t=document.createRange();t.selectNodeContents(n),e.removeAllRanges(),e.addRange(t)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#知识点">知识点</a></li>
+    <li><a href="#最佳实践">最佳实践</a></li>
+    <li><a href="#heading"></a></li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

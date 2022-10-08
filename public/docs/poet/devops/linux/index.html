@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Linux #  网络请求分析 #  tcpdump
+上下文切换监控 #   vnstat pidstat  以上两者都属于sysstat包，MAC不可用。
+  wireshark：事件记录形式
+  tcpdump
+  CPU相关 #  top
+按CPU利用率排序，按q退出交互
+top -o cpu 内存相关 #  vmstat
+vmstat &lt;interval&gt; &lt;count&gt;   r：在运行队列中等待执行的进程数；一般每颗CPU的运行队列应控制在3以内； b：在等待I/O的进程数；此时CPU处于空闲状态，所以应越小越好； free：空闲的物理内存(kb) si：从磁盘交换到内存的swap页数量（kb/sec）；当内存满足时是不应该出现大量交换页的； so：从内存交换到磁盘的swap页数量（kb/sec） cs：每秒上下文切换次数 us：用户进程的CPU时间占比 sy：系统进程的CPU时间占比 id：CPU空闲时间占比 wa：等待I/O的CPU时间占比；过高证明瓶颈在I/O而不是CPU资源；  网络相关 #  netstat
+磁盘相关 #  iostat
+iostat &lt;interval&gt; &lt;count&gt; -tx 报告每秒向终端读取和写入的字符数和CPU的详细信息
+  %user：CPU处在用户模式下的时间百分比。 %nice：CPU处在带NICE值的用户模式下的时间百分比。 %system：CPU处在系统模式下的时间百分比。 %iowait：CPU等待输入输出完成时间的百分比。过高表示I/O存在瓶颈； %steal：管理程序维护另一个虚拟处理器时，虚拟CPU的无意识等待时间百分比。 %idle：CPU空闲时间百分比。如果%idle值高但系统响应慢时，有可能是CPU等待分配内存，此时应加大内存容量。如果持续低于10，那么系统的CPU处理能力相对较低，表明系统中最需要解决的资源是CPU。 Device：磁盘名称 tps：每秒I/O请求数 kb_read/s：每秒读取的block数。 kb_read：读取的block总数。  sar #  基本概念 #  需安装sysstat包。查看使用方法如下：">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="color-scheme" content="light dark"><meta property="og:title" content="Linux" />
+<meta property="og:description" content="Linux #  网络请求分析 #  tcpdump
+上下文切换监控 #   vnstat pidstat  以上两者都属于sysstat包，MAC不可用。
+  wireshark：事件记录形式
+  tcpdump
+  CPU相关 #  top
+按CPU利用率排序，按q退出交互
+top -o cpu 内存相关 #  vmstat
+vmstat &lt;interval&gt; &lt;count&gt;   r：在运行队列中等待执行的进程数；一般每颗CPU的运行队列应控制在3以内； b：在等待I/O的进程数；此时CPU处于空闲状态，所以应越小越好； free：空闲的物理内存(kb) si：从磁盘交换到内存的swap页数量（kb/sec）；当内存满足时是不应该出现大量交换页的； so：从内存交换到磁盘的swap页数量（kb/sec） cs：每秒上下文切换次数 us：用户进程的CPU时间占比 sy：系统进程的CPU时间占比 id：CPU空闲时间占比 wa：等待I/O的CPU时间占比；过高证明瓶颈在I/O而不是CPU资源；  网络相关 #  netstat
+磁盘相关 #  iostat
+iostat &lt;interval&gt; &lt;count&gt; -tx 报告每秒向终端读取和写入的字符数和CPU的详细信息
+  %user：CPU处在用户模式下的时间百分比。 %nice：CPU处在带NICE值的用户模式下的时间百分比。 %system：CPU处在系统模式下的时间百分比。 %iowait：CPU等待输入输出完成时间的百分比。过高表示I/O存在瓶颈； %steal：管理程序维护另一个虚拟处理器时，虚拟CPU的无意识等待时间百分比。 %idle：CPU空闲时间百分比。如果%idle值高但系统响应慢时，有可能是CPU等待分配内存，此时应加大内存容量。如果持续低于10，那么系统的CPU处理能力相对较低，表明系统中最需要解决的资源是CPU。 Device：磁盘名称 tps：每秒I/O请求数 kb_read/s：每秒读取的block数。 kb_read：读取的block总数。  sar #  基本概念 #  需安装sysstat包。查看使用方法如下：" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://example.org/docs/poet/devops/linux/" /><meta property="article:section" content="docs" />
+
+
+
+<title>Linux | 编程之诗</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.c58292d36b18b675680ab9baea2029204537b839ea72f258746ec0f32ce8d6c8.css" integrity="sha256-xYKS02sYtnVoCrm66iApIEU3uDnqcvJYdG7A8yzo1sg=" crossorigin="anonymous">
+  <script defer src="/flexsearch.min.js"></script>
+  <script defer src="/en.search.min.8a55d5d9141238c9e2edb39b1b570a9123c99ae6d8dea771e1b67e2a27c9c36a.js" integrity="sha256-ilXV2RQSOMni7bObG1cKkSPJmubY3qdx4bZ&#43;KifJw2o=" crossorigin="anonymous"></script>
+
+  <script defer src="/sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk=" crossorigin="anonymous"></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/"><img src="/logo.jpeg" alt="Logo" /><span>编程之诗</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/docs/poet/" class="">服务端技术</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-3dc0bcdeacac2d09e305588c01af0eb9" class="toggle"  />
+    <label for="section-3dc0bcdeacac2d09e305588c01af0eb9" class="flex justify-between">
+      <a href="/docs/poet/loadbalance/" class="">负载均衡与反向代理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/loadbalance/nginx/" class="">Nginx</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-a4c0e00f472ffb291f5ccb931cf17910" class="toggle"  />
+    <label for="section-a4c0e00f472ffb291f5ccb931cf17910" class="flex justify-between">
+      <a href="/docs/poet/server/" class="">Web服务器</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server/tomcat/" class="">Tomcat</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-6a989a0f7154c0e30fc000173d18d159" class="toggle"  />
+    <label for="section-6a989a0f7154c0e30fc000173d18d159" class="flex justify-between">
+      <a href="/docs/poet/config/" class="">配置管理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/config/apollo/" class="">Apollo</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-0d7503870886eef7e4a90589c51e6702" class="toggle"  />
+    <label for="section-0d7503870886eef7e4a90589c51e6702" class="flex justify-between">
+      <a href="/docs/poet/discovery/" class="">服务发现</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/discovery/eureka/" class="">Eureka</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ea19dd2dad634391640e3eabea4a79a7" class="toggle"  />
+    <label for="section-ea19dd2dad634391640e3eabea4a79a7" class="flex justify-between">
+      <a href="/docs/poet/gateway/" class="">网关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/gateway/spring-cloud-gateway/" class="">Spring Cloud Gateway</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-267bf1dbb24070fe23f16066764ac3e6" class="toggle"  />
+    <label for="section-267bf1dbb24070fe23f16066764ac3e6" class="flex justify-between">
+      <a href="/docs/poet/tolerance/" class="">服务容错</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/tolerance/hystrix/" class="">Hystrix</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/tolerance/sentinel/" class="">Sentinel</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1566bed1759084fe25fbedde211ab5f4" class="toggle"  />
+    <label for="section-1566bed1759084fe25fbedde211ab5f4" class="flex justify-between">
+      <a href="/docs/poet/server_framework/" class="">服务框架</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/dubbo/" class="">Dubbo</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/springboot/" class="">SpringBoot</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/" class="">异步编程</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/vertx/" class="">Vert.x</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/future/" class="">CompletableFuture</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/rxjava/" class="">RxJava</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-10b9a0cd112515f14ad77b17e9cd35d6" class="toggle"  />
+    <label for="section-10b9a0cd112515f14ad77b17e9cd35d6" class="flex justify-between">
+      <a href="/docs/poet/job/" class="">任务调度</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/job/xxljob/" class="">XXL-Job</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-c668b765ae16f6575e8402e851bad064" class="toggle"  />
+    <label for="section-c668b765ae16f6575e8402e851bad064" class="flex justify-between">
+      <a role="button" class="">数据库</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/sql/" class="">关系型数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/sql/mysql/" class="">MySQL</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/docsql/" class="">文档型数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/docsql/mongodb/" class="">MongoDB</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/colsql/" class="">列式数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/colsql/cassandra/" class="">Cassandra</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/fullsql/" class="">全文数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/fullsql/es/" class="">ElastisSearch</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/cache/" class="">缓存</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/cache/redis/" class="">Redis</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/appcache/" class="">应用内缓存</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/dbproxy/" class="">数据库中间件</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-4194a62f2f6ac00c0aad913c39e3bd62" class="toggle"  />
+    <label for="section-4194a62f2f6ac00c0aad913c39e3bd62" class="flex justify-between">
+      <a href="/docs/poet/mq/" class="">消息中间件</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/mq/kafka/" class="">Kafka</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-d6892adfc8e66be03d32b33aaec13217" class="toggle"  />
+    <label for="section-d6892adfc8e66be03d32b33aaec13217" class="flex justify-between">
+      <a href="/docs/poet/bigdata/" class="">大数据</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-6603b0b9c0113595b4be27635898f9b2" class="toggle"  />
+    <label for="section-6603b0b9c0113595b4be27635898f9b2" class="flex justify-between">
+      <a href="/docs/poet/test/" class="">测试与性能分析</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/benchmark/" class="">压力测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/jmh/" class="">基准测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/cpu/" class="">CPU和线程的性能分析</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/memory/" class="">内存和硬盘的性能分析</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/jvm/" class="">JVM的性能分析</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f257b7f175f4a36b9a290ec1d949339d" class="toggle" checked />
+    <label for="section-f257b7f175f4a36b9a290ec1d949339d" class="flex justify-between">
+      <a href="/docs/poet/devops/" class="">Devops</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/linux/" class="active">Linux</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/code/" class="">代码管理</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/log/" class="">日志管理</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="/posts/" >
+        Blog
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>Linux</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+    <li><a href="#内存相关">内存相关</a></li>
+    <li><a href="#网络相关">网络相关</a></li>
+    <li><a href="#磁盘相关">磁盘相关</a></li>
+    <li><a href="#sar">sar</a>
+      <ul>
+        <li><a href="#基本概念">基本概念</a></li>
+        <li><a href="#查看cpu利用率">查看CPU利用率</a></li>
+        <li><a href="#查看cpu负载">查看CPU负载</a></li>
+        <li><a href="#查看内存使用情况">查看内存使用情况</a></li>
+        <li><a href="#查看io使用情况">查看I/O使用情况</a></li>
+        <li><a href="#查看磁盘使用情况">查看磁盘使用情况</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="linux">
+  Linux
+  <a class="anchor" href="#linux">#</a>
+</h1>
+<h4 id="网络请求分析">
+  网络请求分析
+  <a class="anchor" href="#%e7%bd%91%e7%bb%9c%e8%af%b7%e6%b1%82%e5%88%86%e6%9e%90">#</a>
+</h4>
+<p>tcpdump</p>
+<h4 id="上下文切换监控">
+  上下文切换监控
+  <a class="anchor" href="#%e4%b8%8a%e4%b8%8b%e6%96%87%e5%88%87%e6%8d%a2%e7%9b%91%e6%8e%a7">#</a>
+</h4>
+<ul>
+<li>vnstat</li>
+<li>pidstat</li>
+</ul>
+<p>以上两者都属于sysstat包，MAC不可用。</p>
+<ul>
+<li>
+<p>wireshark：事件记录形式</p>
+</li>
+<li>
+<p>tcpdump</p>
+</li>
+</ul>
+<h4 id="cpu相关">
+  CPU相关
+  <a class="anchor" href="#cpu%e7%9b%b8%e5%85%b3">#</a>
+</h4>
+<p>top</p>
+<p>按CPU利用率排序，按q退出交互</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>top -o cpu
+</span></span></code></pre></div><h2 id="内存相关">
+  内存相关
+  <a class="anchor" href="#%e5%86%85%e5%ad%98%e7%9b%b8%e5%85%b3">#</a>
+</h2>
+<p>vmstat</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>vmstat &lt;interval&gt; &lt;count&gt;
+</span></span></code></pre></div><p>
+  <img src="/images/devops/linux1.png" alt="image" /></p>
+<ul>
+<li>r：在运行队列中等待执行的进程数；一般每颗CPU的运行队列应控制在3以内；</li>
+<li>b：在等待I/O的进程数；此时CPU处于空闲状态，所以应越小越好；</li>
+<li>free：空闲的物理内存(kb)</li>
+<li>si：从磁盘交换到内存的swap页数量（kb/sec）；当内存满足时是不应该出现大量交换页的；</li>
+<li>so：从内存交换到磁盘的swap页数量（kb/sec）</li>
+<li>cs：每秒上下文切换次数</li>
+<li>us：用户进程的CPU时间占比</li>
+<li>sy：系统进程的CPU时间占比</li>
+<li>id：CPU空闲时间占比</li>
+<li>wa：等待I/O的CPU时间占比；过高证明瓶颈在I/O而不是CPU资源；</li>
+</ul>
+<h2 id="网络相关">
+  网络相关
+  <a class="anchor" href="#%e7%bd%91%e7%bb%9c%e7%9b%b8%e5%85%b3">#</a>
+</h2>
+<p>netstat</p>
+<h2 id="磁盘相关">
+  磁盘相关
+  <a class="anchor" href="#%e7%a3%81%e7%9b%98%e7%9b%b8%e5%85%b3">#</a>
+</h2>
+<p>iostat</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>iostat &lt;interval&gt; &lt;count&gt;
+</span></span></code></pre></div><p>-tx 报告每秒向终端读取和写入的字符数和CPU的详细信息</p>
+<p>
+  <img src="/images/devops/linux2.png" alt="image" /></p>
+<ul>
+<li>%user：CPU处在用户模式下的时间百分比。</li>
+<li>%nice：CPU处在带NICE值的用户模式下的时间百分比。</li>
+<li>%system：CPU处在系统模式下的时间百分比。</li>
+<li>%iowait：CPU等待输入输出完成时间的百分比。过高表示I/O存在瓶颈；</li>
+<li>%steal：管理程序维护另一个虚拟处理器时，虚拟CPU的无意识等待时间百分比。</li>
+<li>%idle：CPU空闲时间百分比。如果%idle值高但系统响应慢时，有可能是CPU等待分配内存，此时应加大内存容量。如果持续低于10，那么系统的CPU处理能力相对较低，表明系统中最需要解决的资源是CPU。</li>
+<li>Device：磁盘名称</li>
+<li>tps：每秒I/O请求数</li>
+<li>kb_read/s：每秒读取的block数。</li>
+<li>kb_read：读取的block总数。</li>
+</ul>
+<h2 id="sar">
+  sar
+  <a class="anchor" href="#sar">#</a>
+</h2>
+<h3 id="基本概念">
+  基本概念
+  <a class="anchor" href="#%e5%9f%ba%e6%9c%ac%e6%a6%82%e5%bf%b5">#</a>
+</h3>
+<p>需安装sysstat包。查看使用方法如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>man sar
+</span></span></code></pre></div><h3 id="查看cpu利用率">
+  查看CPU利用率
+  <a class="anchor" href="#%e6%9f%a5%e7%9c%8bcpu%e5%88%a9%e7%94%a8%e7%8e%87">#</a>
+</h3>
+<p>注意这里的CPU信息指向虚拟CPU，而不是物理机上的核数</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>sar -u &lt;interval&gt; &lt;count&gt;
+</span></span></code></pre></div><p>
+  <img src="/images/devops/linux3.png" alt="image" /></p>
+<ul>
+<li>%user 用户级别CPU时间占比。</li>
+<li>%system 系统核心级别CPU时间占比。</li>
+<li>%iowait 等待I/O操作CPU时间占比；过高表示硬盘存在I/O瓶颈。</li>
+<li>%idle 空闲CPU时间占比；高但系统响应慢可能是CPU等待内存分配，需要加大内存；过低则CPU是瓶颈。</li>
+</ul>
+<h3 id="查看cpu负载">
+  查看CPU负载
+  <a class="anchor" href="#%e6%9f%a5%e7%9c%8bcpu%e8%b4%9f%e8%bd%bd">#</a>
+</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>sar -q &lt;interval&gt; &lt;count&gt;
+</span></span></code></pre></div><p>
+  <img src="/images/devops/linux4.png" alt="image" /></p>
+<ul>
+<li>runq-sz 运行队列的长度。</li>
+<li>plist-sz 进程和线程数的数量。</li>
+<li>ldavg-1 最近1分钟的CPU平均负载。</li>
+</ul>
+<h3 id="查看内存使用情况">
+  查看内存使用情况
+  <a class="anchor" href="#%e6%9f%a5%e7%9c%8b%e5%86%85%e5%ad%98%e4%bd%bf%e7%94%a8%e6%83%85%e5%86%b5">#</a>
+</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>sar -r &lt;interval&gt; &lt;count&gt;
+</span></span></code></pre></div><p>
+  <img src="/images/devops/linux5.png" alt="image" /></p>
+<ul>
+<li>kbmemfree：空闲的物理内存大小</li>
+<li>kbmemused：使用中的物理内存大小</li>
+<li>%memused：物理内存使用率</li>
+</ul>
+<h3 id="查看io使用情况">
+  查看I/O使用情况
+  <a class="anchor" href="#%e6%9f%a5%e7%9c%8bio%e4%bd%bf%e7%94%a8%e6%83%85%e5%86%b5">#</a>
+</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>sar -b  &lt;interval&gt; &lt;count&gt;
+</span></span></code></pre></div><p>
+  <img src="/images/devops/linux6.png" alt="image" /></p>
+<ul>
+<li>tps：磁盘每秒I/O数量</li>
+<li>rtps：每秒读取I/O总数</li>
+<li>wtps：每秒写入I/O总数</li>
+<li>bread/s 每秒钟从磁盘读取的块总数</li>
+<li>bwrtn/s 每秒钟此写入到磁盘的块总数</li>
+</ul>
+<h3 id="查看磁盘使用情况">
+  查看磁盘使用情况
+  <a class="anchor" href="#%e6%9f%a5%e7%9c%8b%e7%a3%81%e7%9b%98%e4%bd%bf%e7%94%a8%e6%83%85%e5%86%b5">#</a>
+</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>sar -p -d &lt;interval&gt; &lt;count&gt;
+</span></span></code></pre></div><p>
+  <img src="/images/devops/linux7.png" alt="image" /></p>
+<ul>
+<li>tps：每秒I/O的传输总数</li>
+<li>rd_sec/s 每秒读取的扇区的总数</li>
+<li>wr_sec/s 每秒写入的扇区的 总数</li>
+<li>%util I/O请求占用的CPU百分比，值越高，说明I/O越慢</li>
+</ul>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+
+
+  <script>(function(){function e(n){const e=window.getSelection(),t=document.createRange();t.selectNodeContents(n),e.removeAllRanges(),e.addRange(t)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+    <li><a href="#内存相关">内存相关</a></li>
+    <li><a href="#网络相关">网络相关</a></li>
+    <li><a href="#磁盘相关">磁盘相关</a></li>
+    <li><a href="#sar">sar</a>
+      <ul>
+        <li><a href="#基本概念">基本概念</a></li>
+        <li><a href="#查看cpu利用率">查看CPU利用率</a></li>
+        <li><a href="#查看cpu负载">查看CPU负载</a></li>
+        <li><a href="#查看内存使用情况">查看内存使用情况</a></li>
+        <li><a href="#查看io使用情况">查看I/O使用情况</a></li>
+        <li><a href="#查看磁盘使用情况">查看磁盘使用情况</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="JMH #  测试代码执行效率如果碰到普通循环语句中。在其内部进行打印是没办法很好的测试出性能，因为会存在编译器优化，没办法实现性能测试需要达到的功能。 不过，JMH 也不能完美解决性能测试数据的偏差问题。它甚至会在每次运行的输出结果中打印上述语句，所以，JMH 的开发人员也给出了一个小忠告：我们开发人员不要轻信 JMH 的性能测试数据，不要基于这些数据乱下结论。
+压测，重新进行压测,使用chaosblade添加网络丢包,延迟,并且观察grafana上的指标,来确定问题。
+使用JMH
+生成 JMH 项目
+$ mvn archetype:generate \  -DinteractiveMode=false \  -DarchetypeGroupId=org.openjdk.jmh \  -DarchetypeArtifactId=jmh-java-benchmark-archetype \  -DgroupId=org.sample \  -DartifactId=test \  -Dversion=1.21 $ cd test src/main/org/sample/MyBenchmark.java 编译和运行 JMH 项目
+$ mvn compile $ ls target/generated-sources/annotations/org/sample/generated/ MyBenchmark_jmhType.java MyBenchmark_jmhType_B1.java MyBenchmark_jmhType_B2.java MyBenchmark_jmhType_B3.java MyBenchmark_testMethod_jmhTest.java 接下来可以运行mvn package命令，将编译好的 class 文件打包成 jar 包。生成的 jar 包同样位于target目录下，其名字为benchmarks.jar。jar 包里附带了一系列配置文件，如下所示：
+打包生成的 jar 包可以直接运行。具体指令如下所示：
+$ java -jar target/benchmarks.jar 这里指的是 JMH 会 Fork 出一个新的 Java 虚拟机，来运行性能基准测试。 在这种情况下，通过运行更多的 Fork，并将每个 Java 虚拟机的性能测试结果平均起来，可以增强最终数据的可信度，使其误差更小。在 JMH 中，你可以通过@Fork注解来配置，具体如下述代码所示：">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="color-scheme" content="light dark"><meta property="og:title" content="基准测试" />
+<meta property="og:description" content="JMH #  测试代码执行效率如果碰到普通循环语句中。在其内部进行打印是没办法很好的测试出性能，因为会存在编译器优化，没办法实现性能测试需要达到的功能。 不过，JMH 也不能完美解决性能测试数据的偏差问题。它甚至会在每次运行的输出结果中打印上述语句，所以，JMH 的开发人员也给出了一个小忠告：我们开发人员不要轻信 JMH 的性能测试数据，不要基于这些数据乱下结论。
+压测，重新进行压测,使用chaosblade添加网络丢包,延迟,并且观察grafana上的指标,来确定问题。
+使用JMH
+生成 JMH 项目
+$ mvn archetype:generate \  -DinteractiveMode=false \  -DarchetypeGroupId=org.openjdk.jmh \  -DarchetypeArtifactId=jmh-java-benchmark-archetype \  -DgroupId=org.sample \  -DartifactId=test \  -Dversion=1.21 $ cd test src/main/org/sample/MyBenchmark.java 编译和运行 JMH 项目
+$ mvn compile $ ls target/generated-sources/annotations/org/sample/generated/ MyBenchmark_jmhType.java MyBenchmark_jmhType_B1.java MyBenchmark_jmhType_B2.java MyBenchmark_jmhType_B3.java MyBenchmark_testMethod_jmhTest.java 接下来可以运行mvn package命令，将编译好的 class 文件打包成 jar 包。生成的 jar 包同样位于target目录下，其名字为benchmarks.jar。jar 包里附带了一系列配置文件，如下所示：
+打包生成的 jar 包可以直接运行。具体指令如下所示：
+$ java -jar target/benchmarks.jar 这里指的是 JMH 会 Fork 出一个新的 Java 虚拟机，来运行性能基准测试。 在这种情况下，通过运行更多的 Fork，并将每个 Java 虚拟机的性能测试结果平均起来，可以增强最终数据的可信度，使其误差更小。在 JMH 中，你可以通过@Fork注解来配置，具体如下述代码所示：" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://example.org/docs/poet/test/jmh/" /><meta property="article:section" content="docs" />
+
+
+
+<title>基准测试 | 编程之诗</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.c58292d36b18b675680ab9baea2029204537b839ea72f258746ec0f32ce8d6c8.css" integrity="sha256-xYKS02sYtnVoCrm66iApIEU3uDnqcvJYdG7A8yzo1sg=" crossorigin="anonymous">
+  <script defer src="/flexsearch.min.js"></script>
+  <script defer src="/en.search.min.8a55d5d9141238c9e2edb39b1b570a9123c99ae6d8dea771e1b67e2a27c9c36a.js" integrity="sha256-ilXV2RQSOMni7bObG1cKkSPJmubY3qdx4bZ&#43;KifJw2o=" crossorigin="anonymous"></script>
+
+  <script defer src="/sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk=" crossorigin="anonymous"></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/"><img src="/logo.jpeg" alt="Logo" /><span>编程之诗</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/docs/poet/" class="">服务端技术</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-3dc0bcdeacac2d09e305588c01af0eb9" class="toggle"  />
+    <label for="section-3dc0bcdeacac2d09e305588c01af0eb9" class="flex justify-between">
+      <a href="/docs/poet/loadbalance/" class="">负载均衡与反向代理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/loadbalance/nginx/" class="">Nginx</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-a4c0e00f472ffb291f5ccb931cf17910" class="toggle"  />
+    <label for="section-a4c0e00f472ffb291f5ccb931cf17910" class="flex justify-between">
+      <a href="/docs/poet/server/" class="">Web服务器</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server/tomcat/" class="">Tomcat</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-6a989a0f7154c0e30fc000173d18d159" class="toggle"  />
+    <label for="section-6a989a0f7154c0e30fc000173d18d159" class="flex justify-between">
+      <a href="/docs/poet/config/" class="">配置管理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/config/apollo/" class="">Apollo</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-0d7503870886eef7e4a90589c51e6702" class="toggle"  />
+    <label for="section-0d7503870886eef7e4a90589c51e6702" class="flex justify-between">
+      <a href="/docs/poet/discovery/" class="">服务发现</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/discovery/eureka/" class="">Eureka</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ea19dd2dad634391640e3eabea4a79a7" class="toggle"  />
+    <label for="section-ea19dd2dad634391640e3eabea4a79a7" class="flex justify-between">
+      <a href="/docs/poet/gateway/" class="">网关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/gateway/spring-cloud-gateway/" class="">Spring Cloud Gateway</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-267bf1dbb24070fe23f16066764ac3e6" class="toggle"  />
+    <label for="section-267bf1dbb24070fe23f16066764ac3e6" class="flex justify-between">
+      <a href="/docs/poet/tolerance/" class="">服务容错</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/tolerance/hystrix/" class="">Hystrix</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/tolerance/sentinel/" class="">Sentinel</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1566bed1759084fe25fbedde211ab5f4" class="toggle"  />
+    <label for="section-1566bed1759084fe25fbedde211ab5f4" class="flex justify-between">
+      <a href="/docs/poet/server_framework/" class="">服务框架</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/dubbo/" class="">Dubbo</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/springboot/" class="">SpringBoot</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/" class="">异步编程</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/vertx/" class="">Vert.x</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/future/" class="">CompletableFuture</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/rxjava/" class="">RxJava</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-10b9a0cd112515f14ad77b17e9cd35d6" class="toggle"  />
+    <label for="section-10b9a0cd112515f14ad77b17e9cd35d6" class="flex justify-between">
+      <a href="/docs/poet/job/" class="">任务调度</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/job/xxljob/" class="">XXL-Job</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-c668b765ae16f6575e8402e851bad064" class="toggle"  />
+    <label for="section-c668b765ae16f6575e8402e851bad064" class="flex justify-between">
+      <a role="button" class="">数据库</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/sql/" class="">关系型数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/sql/mysql/" class="">MySQL</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/docsql/" class="">文档型数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/docsql/mongodb/" class="">MongoDB</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/colsql/" class="">列式数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/colsql/cassandra/" class="">Cassandra</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/fullsql/" class="">全文数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/fullsql/es/" class="">ElastisSearch</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/cache/" class="">缓存</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/cache/redis/" class="">Redis</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/appcache/" class="">应用内缓存</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/dbproxy/" class="">数据库中间件</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-4194a62f2f6ac00c0aad913c39e3bd62" class="toggle"  />
+    <label for="section-4194a62f2f6ac00c0aad913c39e3bd62" class="flex justify-between">
+      <a href="/docs/poet/mq/" class="">消息中间件</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/mq/kafka/" class="">Kafka</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-d6892adfc8e66be03d32b33aaec13217" class="toggle"  />
+    <label for="section-d6892adfc8e66be03d32b33aaec13217" class="flex justify-between">
+      <a href="/docs/poet/bigdata/" class="">大数据</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-6603b0b9c0113595b4be27635898f9b2" class="toggle" checked />
+    <label for="section-6603b0b9c0113595b4be27635898f9b2" class="flex justify-between">
+      <a href="/docs/poet/test/" class="">测试与性能分析</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/benchmark/" class="">压力测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/jmh/" class="active">基准测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/cpu/" class="">CPU和线程的性能分析</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/memory/" class="">内存和硬盘的性能分析</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/jvm/" class="">JVM的性能分析</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f257b7f175f4a36b9a290ec1d949339d" class="toggle"  />
+    <label for="section-f257b7f175f4a36b9a290ec1d949339d" class="flex justify-between">
+      <a href="/docs/poet/devops/" class="">Devops</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/linux/" class="">Linux</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/code/" class="">代码管理</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/log/" class="">日志管理</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="/posts/" >
+        Blog
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>基准测试</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#jmh">JMH</a></li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h2 id="jmh">
+  JMH
+  <a class="anchor" href="#jmh">#</a>
+</h2>
+<p>测试代码执行效率如果碰到普通循环语句中。在其内部进行打印是没办法很好的测试出性能，因为会存在编译器优化，没办法实现性能测试需要达到的功能。
+不过，JMH 也不能完美解决性能测试数据的偏差问题。它甚至会在每次运行的输出结果中打印上述语句，所以，JMH 的开发人员也给出了一个小忠告：我们开发人员不要轻信 JMH 的性能测试数据，不要基于这些数据乱下结论。</p>
+<p>压测，重新进行压测,使用chaosblade添加网络丢包,延迟,并且观察grafana上的指标,来确定问题。</p>
+<p>使用JMH</p>
+<p>生成 JMH 项目</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ mvn archetype:generate <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>          -DinteractiveMode<span style="color:#f92672">=</span>false <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>          -DarchetypeGroupId<span style="color:#f92672">=</span>org.openjdk.jmh <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>          -DarchetypeArtifactId<span style="color:#f92672">=</span>jmh-java-benchmark-archetype <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>          -DgroupId<span style="color:#f92672">=</span>org.sample <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>          -DartifactId<span style="color:#f92672">=</span>test <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>          -Dversion<span style="color:#f92672">=</span>1.21
+</span></span><span style="display:flex;"><span>$ cd test
+</span></span><span style="display:flex;"><span>src/main/org/sample/MyBenchmark.java
+</span></span></code></pre></div><p>编译和运行 JMH 项目</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ mvn compile 
+</span></span><span style="display:flex;"><span>$ ls target/generated-sources/annotations/org/sample/generated/ MyBenchmark_jmhType.java MyBenchmark_jmhType_B1.java MyBenchmark_jmhType_B2.java MyBenchmark_jmhType_B3.java MyBenchmark_testMethod_jmhTest.java
+</span></span></code></pre></div><p>接下来可以运行mvn package命令，将编译好的 class 文件打包成 jar 包。生成的 jar 包同样位于target目录下，其名字为benchmarks.jar。jar 包里附带了一系列配置文件，如下所示：</p>
+<p>打包生成的 jar 包可以直接运行。具体指令如下所示：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ java -jar target/benchmarks.jar 
+</span></span></code></pre></div><p>这里指的是 JMH 会 Fork 出一个新的 Java 虚拟机，来运行性能基准测试。
+在这种情况下，通过运行更多的 Fork，并将每个 Java 虚拟机的性能测试结果平均起来，可以增强最终数据的可信度，使其误差更小。在 JMH 中，你可以通过@Fork注解来配置，具体如下述代码所示：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Fork</span><span style="color:#f92672">(</span>10<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MyBenchmark</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>除了吞吐量之外，我们还可以输出其他格式的性能数据，例如运行一次操作的平均时间。具体的配置方法以及对应参数如下述代码以及下表所示：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@BenchmarkMode</span><span style="color:#f92672">(</span>Mode<span style="color:#f92672">.</span><span style="color:#a6e22e">AverageTime</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MyBenchmark</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div></article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+
+
+  <script>(function(){function e(n){const e=window.getSelection(),t=document.createRange();t.selectNodeContents(n),e.removeAllRanges(),e.addRange(t)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#jmh">JMH</a></li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

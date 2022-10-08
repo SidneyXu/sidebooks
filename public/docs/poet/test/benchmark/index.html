@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="性能检测工具 #  压力测试 #  Apache的ab工具 #  主要看95%和99%分位的响应，另外mac默认的ab有BUG。
+ab -n &lt;请求数&gt; -c &lt;并发数&gt; &lt;url&gt; 举例
+ab -n 10000 -c 1000 -p &#39;params.txt&#39; -T &#39;application/json&#39; &#39;http://localhost:8080/api/clients/register&#39; 输出结果
+This is ApacheBench, Version 2.3 &lt;$Revision: 1879490 $&gt; Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/ Licensed to The Apache Software Foundation, http://www.apache.org/  Benchmarking 127.0.0.1 (be patient) Completed 1000 requests Completed 2000 requests Completed 3000 requests Completed 4000 requests Completed 5000 requests Completed 6000 requests Completed 7000 requests Completed 8000 requests Completed 9000 requests Completed 10000 requests Finished 10000 requests   Server Software: Server Hostname: 127.">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="color-scheme" content="light dark"><meta property="og:title" content="压力测试" />
+<meta property="og:description" content="性能检测工具 #  压力测试 #  Apache的ab工具 #  主要看95%和99%分位的响应，另外mac默认的ab有BUG。
+ab -n &lt;请求数&gt; -c &lt;并发数&gt; &lt;url&gt; 举例
+ab -n 10000 -c 1000 -p &#39;params.txt&#39; -T &#39;application/json&#39; &#39;http://localhost:8080/api/clients/register&#39; 输出结果
+This is ApacheBench, Version 2.3 &lt;$Revision: 1879490 $&gt; Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/ Licensed to The Apache Software Foundation, http://www.apache.org/  Benchmarking 127.0.0.1 (be patient) Completed 1000 requests Completed 2000 requests Completed 3000 requests Completed 4000 requests Completed 5000 requests Completed 6000 requests Completed 7000 requests Completed 8000 requests Completed 9000 requests Completed 10000 requests Finished 10000 requests   Server Software: Server Hostname: 127." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://example.org/docs/poet/test/benchmark/" /><meta property="article:section" content="docs" />
+
+
+
+<title>压力测试 | 编程之诗</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.c58292d36b18b675680ab9baea2029204537b839ea72f258746ec0f32ce8d6c8.css" integrity="sha256-xYKS02sYtnVoCrm66iApIEU3uDnqcvJYdG7A8yzo1sg=" crossorigin="anonymous">
+  <script defer src="/flexsearch.min.js"></script>
+  <script defer src="/en.search.min.8a55d5d9141238c9e2edb39b1b570a9123c99ae6d8dea771e1b67e2a27c9c36a.js" integrity="sha256-ilXV2RQSOMni7bObG1cKkSPJmubY3qdx4bZ&#43;KifJw2o=" crossorigin="anonymous"></script>
+
+  <script defer src="/sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk=" crossorigin="anonymous"></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/"><img src="/logo.jpeg" alt="Logo" /><span>编程之诗</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/docs/poet/" class="">服务端技术</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-3dc0bcdeacac2d09e305588c01af0eb9" class="toggle"  />
+    <label for="section-3dc0bcdeacac2d09e305588c01af0eb9" class="flex justify-between">
+      <a href="/docs/poet/loadbalance/" class="">负载均衡与反向代理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/loadbalance/nginx/" class="">Nginx</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-a4c0e00f472ffb291f5ccb931cf17910" class="toggle"  />
+    <label for="section-a4c0e00f472ffb291f5ccb931cf17910" class="flex justify-between">
+      <a href="/docs/poet/server/" class="">Web服务器</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server/tomcat/" class="">Tomcat</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-6a989a0f7154c0e30fc000173d18d159" class="toggle"  />
+    <label for="section-6a989a0f7154c0e30fc000173d18d159" class="flex justify-between">
+      <a href="/docs/poet/config/" class="">配置管理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/config/apollo/" class="">Apollo</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-0d7503870886eef7e4a90589c51e6702" class="toggle"  />
+    <label for="section-0d7503870886eef7e4a90589c51e6702" class="flex justify-between">
+      <a href="/docs/poet/discovery/" class="">服务发现</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/discovery/eureka/" class="">Eureka</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ea19dd2dad634391640e3eabea4a79a7" class="toggle"  />
+    <label for="section-ea19dd2dad634391640e3eabea4a79a7" class="flex justify-between">
+      <a href="/docs/poet/gateway/" class="">网关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/gateway/spring-cloud-gateway/" class="">Spring Cloud Gateway</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-267bf1dbb24070fe23f16066764ac3e6" class="toggle"  />
+    <label for="section-267bf1dbb24070fe23f16066764ac3e6" class="flex justify-between">
+      <a href="/docs/poet/tolerance/" class="">服务容错</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/tolerance/hystrix/" class="">Hystrix</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/tolerance/sentinel/" class="">Sentinel</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1566bed1759084fe25fbedde211ab5f4" class="toggle"  />
+    <label for="section-1566bed1759084fe25fbedde211ab5f4" class="flex justify-between">
+      <a href="/docs/poet/server_framework/" class="">服务框架</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/dubbo/" class="">Dubbo</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/springboot/" class="">SpringBoot</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/" class="">异步编程</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/vertx/" class="">Vert.x</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/future/" class="">CompletableFuture</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/rxjava/" class="">RxJava</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-10b9a0cd112515f14ad77b17e9cd35d6" class="toggle"  />
+    <label for="section-10b9a0cd112515f14ad77b17e9cd35d6" class="flex justify-between">
+      <a href="/docs/poet/job/" class="">任务调度</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/job/xxljob/" class="">XXL-Job</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-c668b765ae16f6575e8402e851bad064" class="toggle"  />
+    <label for="section-c668b765ae16f6575e8402e851bad064" class="flex justify-between">
+      <a role="button" class="">数据库</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/sql/" class="">关系型数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/sql/mysql/" class="">MySQL</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/docsql/" class="">文档型数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/docsql/mongodb/" class="">MongoDB</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/colsql/" class="">列式数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/colsql/cassandra/" class="">Cassandra</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/fullsql/" class="">全文数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/fullsql/es/" class="">ElastisSearch</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/cache/" class="">缓存</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/cache/redis/" class="">Redis</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/appcache/" class="">应用内缓存</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/dbproxy/" class="">数据库中间件</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-4194a62f2f6ac00c0aad913c39e3bd62" class="toggle"  />
+    <label for="section-4194a62f2f6ac00c0aad913c39e3bd62" class="flex justify-between">
+      <a href="/docs/poet/mq/" class="">消息中间件</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/mq/kafka/" class="">Kafka</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-d6892adfc8e66be03d32b33aaec13217" class="toggle"  />
+    <label for="section-d6892adfc8e66be03d32b33aaec13217" class="flex justify-between">
+      <a href="/docs/poet/bigdata/" class="">大数据</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-6603b0b9c0113595b4be27635898f9b2" class="toggle" checked />
+    <label for="section-6603b0b9c0113595b4be27635898f9b2" class="flex justify-between">
+      <a href="/docs/poet/test/" class="">测试与性能分析</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/benchmark/" class="active">压力测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/jmh/" class="">基准测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/cpu/" class="">CPU和线程的性能分析</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/memory/" class="">内存和硬盘的性能分析</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/jvm/" class="">JVM的性能分析</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f257b7f175f4a36b9a290ec1d949339d" class="toggle"  />
+    <label for="section-f257b7f175f4a36b9a290ec1d949339d" class="flex justify-between">
+      <a href="/docs/poet/devops/" class="">Devops</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/linux/" class="">Linux</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/code/" class="">代码管理</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/log/" class="">日志管理</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="/posts/" >
+        Blog
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>压力测试</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#压力测试">压力测试</a>
+      <ul>
+        <li><a href="#apache的ab工具">Apache的ab工具</a></li>
+        <li><a href="#gatling">Gatling</a></li>
+      </ul>
+    </li>
+    <li><a href="#堆内存监测">堆内存监测</a>
+      <ul>
+        <li><a href="#jmap">jmap</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="性能检测工具">
+  性能检测工具
+  <a class="anchor" href="#%e6%80%a7%e8%83%bd%e6%a3%80%e6%b5%8b%e5%b7%a5%e5%85%b7">#</a>
+</h1>
+<h2 id="压力测试">
+  压力测试
+  <a class="anchor" href="#%e5%8e%8b%e5%8a%9b%e6%b5%8b%e8%af%95">#</a>
+</h2>
+<h3 id="apache的ab工具">
+  Apache的ab工具
+  <a class="anchor" href="#apache%e7%9a%84ab%e5%b7%a5%e5%85%b7">#</a>
+</h3>
+<p>主要看95%和99%分位的响应，另外mac默认的ab有BUG。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>ab -n &lt;请求数&gt; -c &lt;并发数&gt; &lt;url&gt;
+</span></span></code></pre></div><p>举例</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>ab -n <span style="color:#ae81ff">10000</span> -c <span style="color:#ae81ff">1000</span> -p <span style="color:#e6db74">&#39;params.txt&#39;</span> -T <span style="color:#e6db74">&#39;application/json&#39;</span> <span style="color:#e6db74">&#39;http://localhost:8080/api/clients/register&#39;</span>
+</span></span></code></pre></div><p>输出结果</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>This is ApacheBench, Version 2.3 &lt;$Revision: <span style="color:#ae81ff">1879490</span> $&gt;
+</span></span><span style="display:flex;"><span>Copyright <span style="color:#ae81ff">1996</span> Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+</span></span><span style="display:flex;"><span>Licensed to The Apache Software Foundation, http://www.apache.org/
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Benchmarking 127.0.0.1 <span style="color:#f92672">(</span>be patient<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Completed <span style="color:#ae81ff">1000</span> requests
+</span></span><span style="display:flex;"><span>Completed <span style="color:#ae81ff">2000</span> requests
+</span></span><span style="display:flex;"><span>Completed <span style="color:#ae81ff">3000</span> requests
+</span></span><span style="display:flex;"><span>Completed <span style="color:#ae81ff">4000</span> requests
+</span></span><span style="display:flex;"><span>Completed <span style="color:#ae81ff">5000</span> requests
+</span></span><span style="display:flex;"><span>Completed <span style="color:#ae81ff">6000</span> requests
+</span></span><span style="display:flex;"><span>Completed <span style="color:#ae81ff">7000</span> requests
+</span></span><span style="display:flex;"><span>Completed <span style="color:#ae81ff">8000</span> requests
+</span></span><span style="display:flex;"><span>Completed <span style="color:#ae81ff">9000</span> requests
+</span></span><span style="display:flex;"><span>Completed <span style="color:#ae81ff">10000</span> requests
+</span></span><span style="display:flex;"><span>Finished <span style="color:#ae81ff">10000</span> requests
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Server Software:        
+</span></span><span style="display:flex;"><span>Server Hostname:        127.0.0.1
+</span></span><span style="display:flex;"><span>Server Port:            <span style="color:#ae81ff">10808</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Document Path:          /api/clients/register
+</span></span><span style="display:flex;"><span>Document Length:        <span style="color:#ae81ff">436</span> bytes
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Concurrency Level:      <span style="color:#ae81ff">4000</span>
+</span></span><span style="display:flex;"><span>Time taken <span style="color:#66d9ef">for</span> tests:   7.382 seconds
+</span></span><span style="display:flex;"><span>Complete requests:      <span style="color:#ae81ff">10000</span>
+</span></span><span style="display:flex;"><span>Failed requests:        <span style="color:#ae81ff">578</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#f92672">(</span>Connect: 0, Receive: 0, Length: 578, Exceptions: 0<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Total transferred:      <span style="color:#ae81ff">8119389</span> bytes
+</span></span><span style="display:flex;"><span>Total body sent:        <span style="color:#ae81ff">5060000</span>
+</span></span><span style="display:flex;"><span>HTML transferred:       <span style="color:#ae81ff">4359389</span> bytes
+</span></span><span style="display:flex;"><span>Requests per second:    1354.63 <span style="color:#f92672">[</span><span style="color:#75715e">#/sec] (mean)</span>
+</span></span><span style="display:flex;"><span>Time per request:       2952.841 <span style="color:#f92672">[</span>ms<span style="color:#f92672">]</span> <span style="color:#f92672">(</span>mean<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Time per request:       0.738 <span style="color:#f92672">[</span>ms<span style="color:#f92672">]</span> <span style="color:#f92672">(</span>mean, across all concurrent requests<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Transfer rate:          1074.10 <span style="color:#f92672">[</span>Kbytes/sec<span style="color:#f92672">]</span> received
+</span></span><span style="display:flex;"><span>                        669.38 kb/s sent
+</span></span><span style="display:flex;"><span>                        1743.47 kb/s total
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Connection Times <span style="color:#f92672">(</span>ms<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>              min  mean<span style="color:#f92672">[</span>+/-sd<span style="color:#f92672">]</span> median   max
+</span></span><span style="display:flex;"><span>Connect:        <span style="color:#ae81ff">0</span>   <span style="color:#ae81ff">37</span>  48.3      <span style="color:#ae81ff">1</span>     <span style="color:#ae81ff">167</span>
+</span></span><span style="display:flex;"><span>Processing:    <span style="color:#ae81ff">66</span> <span style="color:#ae81ff">2416</span> 805.2   <span style="color:#ae81ff">2781</span>    <span style="color:#ae81ff">3296</span>
+</span></span><span style="display:flex;"><span>Waiting:        <span style="color:#ae81ff">6</span> <span style="color:#ae81ff">2416</span> 805.4   <span style="color:#ae81ff">2781</span>    <span style="color:#ae81ff">3296</span>
+</span></span><span style="display:flex;"><span>Total:        <span style="color:#ae81ff">146</span> <span style="color:#ae81ff">2453</span> 760.8   <span style="color:#ae81ff">2793</span>    <span style="color:#ae81ff">3296</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Percentage of the requests served within a certain time <span style="color:#f92672">(</span>ms<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  50%   <span style="color:#ae81ff">2793</span>
+</span></span><span style="display:flex;"><span>  66%   <span style="color:#ae81ff">2912</span>
+</span></span><span style="display:flex;"><span>  75%   <span style="color:#ae81ff">2966</span>
+</span></span><span style="display:flex;"><span>  80%   <span style="color:#ae81ff">3041</span>
+</span></span><span style="display:flex;"><span>  90%   <span style="color:#ae81ff">3065</span>
+</span></span><span style="display:flex;"><span>  95%   <span style="color:#ae81ff">3086</span>
+</span></span><span style="display:flex;"><span>  98%   <span style="color:#ae81ff">3118</span>
+</span></span><span style="display:flex;"><span>  99%   <span style="color:#ae81ff">3162</span>
+</span></span><span style="display:flex;"><span> 100%   <span style="color:#ae81ff">3296</span> <span style="color:#f92672">(</span>longest request<span style="color:#f92672">)</span>
+</span></span></code></pre></div><ul>
+<li>Requests per second：吞吐率，指某个并发用户数下单位时间内处理的请求数；</li>
+<li>Time per request：上面的是用户平均请求等待时间，指处理完成所有请求数所花费的时间 /（总请求数 / 并发用户数）；</li>
+<li>Time per request：下面的是服务器平均请求处理时间，指处理完成所有请求数所花费的时间 / 总请求数；</li>
+<li>Percentage of the requests served within a certain time：每秒请求时间分布情况，指在整个请求中，每个请求的时间长度的分布情况，例如有 50% 的请求响应在 8ms 内，66% 的请求响应在 10ms 内，说明有 16% 的请求在 8ms~10ms 之间。</li>
+</ul>
+<h3 id="gatling">
+  Gatling
+  <a class="anchor" href="#gatling">#</a>
+</h3>
+<h2 id="堆内存监测">
+  堆内存监测
+  <a class="anchor" href="#%e5%a0%86%e5%86%85%e5%ad%98%e7%9b%91%e6%b5%8b">#</a>
+</h2>
+<h3 id="jmap">
+  jmap
+  <a class="anchor" href="#jmap">#</a>
+</h3>
+<p>查看堆信息。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>jmap -heap &lt;pid&gt;
+</span></span></code></pre></div><p>导出堆信息，导出后的文件可以放入MAT来查看。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>jmap -dump:format<span style="color:#f92672">=</span>b,file<span style="color:#f92672">=</span>&lt;hprof_filename&gt; &lt;pid&gt;
+</span></span></code></pre></div><!-- raw HTML omitted -->
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+
+
+  <script>(function(){function e(n){const e=window.getSelection(),t=document.createRange();t.selectNodeContents(n),e.removeAllRanges(),e.addRange(t)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#压力测试">压力测试</a>
+      <ul>
+        <li><a href="#apache的ab工具">Apache的ab工具</a></li>
+        <li><a href="#gatling">Gatling</a></li>
+      </ul>
+    </li>
+    <li><a href="#堆内存监测">堆内存监测</a>
+      <ul>
+        <li><a href="#jmap">jmap</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

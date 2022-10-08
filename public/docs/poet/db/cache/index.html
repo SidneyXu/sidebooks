@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="缓存数据库 #  知识点 #  Redis性能问题
+ 大key或者多个key删除 AOF同步写回 AOF重写引起AOF写回阻塞，井AOF日志配置到SSD。 加载大RDB，一般控制在2G到4G。 在节点上执行聚合操作。 操作系统swap，通常发生在内存不足时。当出现百MB以上swap则需要加内存或加节点。可以通过redis-cli info | grep process_id命令查询swap大小。 使用了内存大页，生产中建议关闭。如果采用了内存大页，那么，即使客户端请求只修改 100B 的数据，Redis 也需要拷贝 2MB 的大页。相反，如果是常规内存页机制，只用拷贝 4KB。 开启了碎片清理，内存碎片清理由主线程操作。调小active-defrag-cycle-max ，控制内存碎片整理所用CPU时间。 从库落后太多，大key写入引起复制风暴  最佳实践 #   通用  通过CAT等统计缓存命中率 优先写数据库删缓存。特定情况可以同时更新数据库和缓存，比如新用户注册，删缓存没有意义，而注册后的用户大概率需要用到注册信息。 适用场合：  读多写少，更新不频繁的热点数据。 计算代价大的数据。 不与具体用户绑定，千人一面的数据。如商品页、排行榜、公告栏等。 对数据一致性要求不严格。     Redis  持久化  Master最好不要做任何持久化工作，比如RDB内存快照和AOF日志文件 如果数据比较重要，则在某个Slave开启AOF备份数据，策略设置为每秒同步一次 如果数据非常重要，则同时开启RDB和AOF。 在这种情况下， 当redis重启的时候会优先载入AOF文件来恢复原始的数据，因为在通常情况下AOF文件保存的数据集要比RDB文件保存的数据集要完整。 数据不能丢，AOF&#43;RDB。 允许分钟丢失，RDB。 只用AOF时优先everysec。   集群  Master和Slave在同一个局域网内。 哨兵至少3个，且所有哨兵配置一样。 为了避免主从同步时，主库全量RDB的压力，主从复制不要使用图状结构，而是使用级联的单向链表结构方式分摊压力。例如：从1，从2同步自主库。从3，从4同步自从1。   List只当队列用。 大量数据用scan范围操作。 布隆过滤器是大key，建议放在单独的Redis实例中。 使用expire_at设置具体的过期时间点。而expire为存活时间，在从库为收到主库同步过来的命令的时间加上存活时间，所以可能发生过期读。 通过unlink异步删除大key。 关闭Huge page，避免AOF重写时因为大页拷贝引起的阻塞。    Redis Server">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="color-scheme" content="light dark"><meta property="og:title" content="缓存" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="http://example.org/docs/poet/db/cache/" />
+
+<title>缓存 | 编程之诗</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.c58292d36b18b675680ab9baea2029204537b839ea72f258746ec0f32ce8d6c8.css" integrity="sha256-xYKS02sYtnVoCrm66iApIEU3uDnqcvJYdG7A8yzo1sg=" crossorigin="anonymous">
+  <script defer src="/flexsearch.min.js"></script>
+  <script defer src="/en.search.min.8a55d5d9141238c9e2edb39b1b570a9123c99ae6d8dea771e1b67e2a27c9c36a.js" integrity="sha256-ilXV2RQSOMni7bObG1cKkSPJmubY3qdx4bZ&#43;KifJw2o=" crossorigin="anonymous"></script>
+
+  <script defer src="/sw.min.6f6f90fcb8eb1c49ec389838e6b801d0de19430b8e516902f8d75c3c8bd98739.js" integrity="sha256-b2&#43;Q/LjrHEnsOJg45rgB0N4ZQwuOUWkC&#43;NdcPIvZhzk=" crossorigin="anonymous"></script>
+<link rel="alternate" type="application/rss+xml" href="http://example.org/docs/poet/db/cache/index.xml" title="编程之诗" />
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/"><img src="/logo.jpeg" alt="Logo" /><span>编程之诗</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/docs/poet/" class="">服务端技术</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-3dc0bcdeacac2d09e305588c01af0eb9" class="toggle"  />
+    <label for="section-3dc0bcdeacac2d09e305588c01af0eb9" class="flex justify-between">
+      <a href="/docs/poet/loadbalance/" class="">负载均衡与反向代理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/loadbalance/nginx/" class="">Nginx</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-a4c0e00f472ffb291f5ccb931cf17910" class="toggle"  />
+    <label for="section-a4c0e00f472ffb291f5ccb931cf17910" class="flex justify-between">
+      <a href="/docs/poet/server/" class="">Web服务器</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server/tomcat/" class="">Tomcat</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-6a989a0f7154c0e30fc000173d18d159" class="toggle"  />
+    <label for="section-6a989a0f7154c0e30fc000173d18d159" class="flex justify-between">
+      <a href="/docs/poet/config/" class="">配置管理</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/config/apollo/" class="">Apollo</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-0d7503870886eef7e4a90589c51e6702" class="toggle"  />
+    <label for="section-0d7503870886eef7e4a90589c51e6702" class="flex justify-between">
+      <a href="/docs/poet/discovery/" class="">服务发现</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/discovery/eureka/" class="">Eureka</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-ea19dd2dad634391640e3eabea4a79a7" class="toggle"  />
+    <label for="section-ea19dd2dad634391640e3eabea4a79a7" class="flex justify-between">
+      <a href="/docs/poet/gateway/" class="">网关</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/gateway/spring-cloud-gateway/" class="">Spring Cloud Gateway</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-267bf1dbb24070fe23f16066764ac3e6" class="toggle"  />
+    <label for="section-267bf1dbb24070fe23f16066764ac3e6" class="flex justify-between">
+      <a href="/docs/poet/tolerance/" class="">服务容错</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/tolerance/hystrix/" class="">Hystrix</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/tolerance/sentinel/" class="">Sentinel</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-1566bed1759084fe25fbedde211ab5f4" class="toggle"  />
+    <label for="section-1566bed1759084fe25fbedde211ab5f4" class="flex justify-between">
+      <a href="/docs/poet/server_framework/" class="">服务框架</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/dubbo/" class="">Dubbo</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/springboot/" class="">SpringBoot</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/" class="">异步编程</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/vertx/" class="">Vert.x</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/future/" class="">CompletableFuture</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/server_framework/async/rxjava/" class="">RxJava</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-10b9a0cd112515f14ad77b17e9cd35d6" class="toggle"  />
+    <label for="section-10b9a0cd112515f14ad77b17e9cd35d6" class="flex justify-between">
+      <a href="/docs/poet/job/" class="">任务调度</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/job/xxljob/" class="">XXL-Job</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-c668b765ae16f6575e8402e851bad064" class="toggle" checked />
+    <label for="section-c668b765ae16f6575e8402e851bad064" class="flex justify-between">
+      <a role="button" class="">数据库</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/sql/" class="">关系型数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/sql/mysql/" class="">MySQL</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/docsql/" class="">文档型数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/docsql/mongodb/" class="">MongoDB</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/colsql/" class="">列式数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/colsql/cassandra/" class="">Cassandra</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/fullsql/" class="">全文数据库</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/fullsql/es/" class="">ElastisSearch</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/cache/" class="active">缓存</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/cache/redis/" class="">Redis</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/appcache/" class="">应用内缓存</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/db/dbproxy/" class="">数据库中间件</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-4194a62f2f6ac00c0aad913c39e3bd62" class="toggle"  />
+    <label for="section-4194a62f2f6ac00c0aad913c39e3bd62" class="flex justify-between">
+      <a href="/docs/poet/mq/" class="">消息中间件</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/mq/kafka/" class="">Kafka</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-d6892adfc8e66be03d32b33aaec13217" class="toggle"  />
+    <label for="section-d6892adfc8e66be03d32b33aaec13217" class="flex justify-between">
+      <a href="/docs/poet/bigdata/" class="">大数据</a>
+    </label>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-6603b0b9c0113595b4be27635898f9b2" class="toggle"  />
+    <label for="section-6603b0b9c0113595b4be27635898f9b2" class="flex justify-between">
+      <a href="/docs/poet/test/" class="">测试与性能分析</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/benchmark/" class="">压力测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/jmh/" class="">基准测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/cpu/" class="">CPU和线程的性能分析</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/memory/" class="">内存和硬盘的性能分析</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/test/jvm/" class="">JVM的性能分析</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <input type="checkbox" id="section-f257b7f175f4a36b9a290ec1d949339d" class="toggle"  />
+    <label for="section-f257b7f175f4a36b9a290ec1d949339d" class="flex justify-between">
+      <a href="/docs/poet/devops/" class="">Devops</a>
+    </label>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/linux/" class="">Linux</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/code/" class="">代码管理</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/docs/poet/devops/log/" class="">日志管理</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="/posts/" >
+        Blog
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>缓存</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#知识点">知识点</a></li>
+    <li><a href="#最佳实践">最佳实践</a></li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="缓存数据库">
+  缓存数据库
+  <a class="anchor" href="#%e7%bc%93%e5%ad%98%e6%95%b0%e6%8d%ae%e5%ba%93">#</a>
+</h1>
+<h2 id="知识点">
+  知识点
+  <a class="anchor" href="#%e7%9f%a5%e8%af%86%e7%82%b9">#</a>
+</h2>
+<p>Redis性能问题</p>
+<ul>
+<li>大key或者多个key删除</li>
+<li>AOF同步写回</li>
+<li>AOF重写引起AOF写回阻塞，井AOF日志配置到SSD。</li>
+<li>加载大RDB，一般控制在2G到4G。</li>
+<li>在节点上执行聚合操作。</li>
+<li>操作系统swap，通常发生在内存不足时。当出现百MB以上swap则需要加内存或加节点。可以通过redis-cli info | grep process_id命令查询swap大小。</li>
+<li>使用了内存大页，生产中建议关闭。如果采用了内存大页，那么，即使客户端请求只修改 100B 的数据，Redis 也需要拷贝 2MB 的大页。相反，如果是常规内存页机制，只用拷贝 4KB。</li>
+<li>开启了碎片清理，内存碎片清理由主线程操作。调小active-defrag-cycle-max ，控制内存碎片整理所用CPU时间。</li>
+<li>从库落后太多，大key写入引起复制风暴</li>
+</ul>
+<h2 id="最佳实践">
+  最佳实践
+  <a class="anchor" href="#%e6%9c%80%e4%bd%b3%e5%ae%9e%e8%b7%b5">#</a>
+</h2>
+<ul>
+<li>通用
+<ul>
+<li>通过CAT等统计缓存命中率</li>
+<li>优先写数据库删缓存。特定情况可以同时更新数据库和缓存，比如新用户注册，删缓存没有意义，而注册后的用户大概率需要用到注册信息。</li>
+<li>适用场合：
+<ul>
+<li>读多写少，更新不频繁的热点数据。</li>
+<li>计算代价大的数据。</li>
+<li>不与具体用户绑定，千人一面的数据。如商品页、排行榜、公告栏等。</li>
+<li>对数据一致性要求不严格。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Redis
+<ul>
+<li>持久化
+<ul>
+<li>Master最好不要做任何持久化工作，比如RDB内存快照和AOF日志文件</li>
+<li>如果数据比较重要，则在某个Slave开启AOF备份数据，策略设置为每秒同步一次</li>
+<li>如果数据非常重要，则同时开启RDB和AOF。 在这种情况下， 当redis重启的时候会优先载入AOF文件来恢复原始的数据，因为在通常情况下AOF文件保存的数据集要比RDB文件保存的数据集要完整。</li>
+<li>数据不能丢，AOF+RDB。</li>
+<li>允许分钟丢失，RDB。</li>
+<li>只用AOF时优先everysec。</li>
+</ul>
+</li>
+<li>集群
+<ul>
+<li>Master和Slave在同一个局域网内。</li>
+<li>哨兵至少3个，且所有哨兵配置一样。</li>
+<li>为了避免主从同步时，主库全量RDB的压力，主从复制不要使用图状结构，而是使用级联的单向链表结构方式分摊压力。例如：从1，从2同步自主库。从3，从4同步自从1。</li>
+</ul>
+</li>
+<li>List只当队列用。</li>
+<li>大量数据用scan范围操作。</li>
+<li>布隆过滤器是大key，建议放在单独的Redis实例中。</li>
+<li>使用expire_at设置具体的过期时间点。而expire为存活时间，在从库为收到主库同步过来的命令的时间加上存活时间，所以可能发生过期读。</li>
+<li>通过unlink异步删除大key。</li>
+<li>关闭Huge page，避免AOF重写时因为大页拷贝引起的阻塞。</li>
+</ul>
+</li>
+</ul>
+<p>Redis Server</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yml" data-lang="yml"><span style="display:flex;"><span><span style="color:#75715e"># 缓冲</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## replication buffer大小。断开连接时会被清空。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">client-output-buffer-limit=256mb</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 集群</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 防止脑裂</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### 主库能进行数据同步的最少从库数量</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">min-slaves-to-write=从库数/2+1</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### 主从同步时，从库给主库发送 ACK 消息的最大延迟时间（以秒为单位）</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">min-slaves-max-lag=10到20s</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### 哨兵判断的客观下线时间。适当调大该值，当哨兵与主库之间网络存在短时波动时，可以降低误判的概率。但是调大也意味着主从切换的时间会变长，对业务的影响时间越久。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">down-after-milliseconds=10s</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Redis Cluster集群</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### 节点心跳超时时间。如果分片节点采用一主一从模式，如果主从切换过慢超过节点心跳超时时间。分片集群就会认为该节点右异常，如果一半异常集群就会停止服务，所以应该调大一点。</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">cluster-node-timeout=10到20s</span>
+</span></span></code></pre></div></article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+
+
+  <script>(function(){function e(n){const e=window.getSelection(),t=document.createRange();t.selectNodeContents(n),e.removeAllRanges(),e.addRange(t)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#知识点">知识点</a></li>
+    <li><a href="#最佳实践">最佳实践</a></li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
