@@ -6,7 +6,7 @@
 # all pages.
 # disqusShortname = "my-site"
 
-baseURL = 'http://example.org/'
+baseURL = 'http://SidneyXu.github.io/sidebooks'
 languageCode = 'en-us'
 title = '编程之诗'
 
