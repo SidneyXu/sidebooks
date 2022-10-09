@@ -19,7 +19,7 @@ enableGitInfo = true
 
 [module]
 [[module.imports]]
-path = 'hugo-book'
+path = 'hugo-book1'
 
 [markup.goldmark.renderer]
   unsafe = true
