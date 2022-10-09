@@ -1,6 +1,6 @@
 # (Optional) Set Google Analytics if you use it to track your website.
 # Always put it on the top of the configuration file, otherwise it won't work
-# googleAnalytics = "UA-XXXXXXXXX-X"
+googleAnalytics = "UA-66541663-1"
 
 # (Optional) If you provide a Disqus shortname, comments will be enabled on
 # all pages.
@@ -16,6 +16,13 @@ disablePathToLower = true
 # (Optional) Set this to true to enable 'Last Modified by' date and git author
 #  information on 'doc' type pages.
 enableGitInfo = true
+
+[module]
+[[module.imports]]
+path = 'hugo-book'
+
+[markup.goldmark.renderer]
+  unsafe = true
 
 [params]
   # (Optional, default light) Sets color theme: light, dark or auto.
@@ -36,19 +43,19 @@ enableGitInfo = true
 
   # Set source repository location.
   # Used for 'Last Modified' and 'Edit this page' links.
-  # BookRepo = 'https://github.com/alex-shpak/hugo-book'
+  #BookRepo = 'https://github.com/alex-shpak/hugo-book'
 
   # Specifies commit portion of the link to the page's last modified commit hash for 'doc' page
   # type.
   # Required if 'BookRepo' param is set.
   # Value used to construct a URL consisting of BookRepo/BookCommitPath/<commit-hash>
   # Github uses 'commit', Bitbucket uses 'commits'
-  BookCommitPath = 'commit'
+  #BookCommitPath = 'commit'
 
   # Enable 'Edit this page' links for 'doc' page type.
   # Disabled by default. Uncomment to enable. Requires 'BookRepo' param.
   # Path must point to the site directory.
-  # BookEditPath = 'edit/master/exampleSite'
+  #BookEditPath = 'edit/master/exampleSite'
 
   # (Optional, default January 2, 2006) Configure the date format used on the pages
   # - In git information
@@ -75,3 +82,6 @@ enableGitInfo = true
   # /!\ This is an experimental feature, might be removed or changed at any time
   # (Optional, experimental, default false) Enables service worker that caches visited pages and resources for offline use.
   BookServiceWorker = true
+
+  flagcounter = "1fWDHae"
+  baiduAnalytics = "1dcca96f408870b7c0b33bb3ad210577"
