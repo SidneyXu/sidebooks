@@ -7,22 +7,8 @@ weight: 7
 
 ## 知识点
 
-
+建设中
 
 ## 最佳实践
 
-
-
-## Sharding-Sphere
-
-由三个组件组成： Sharding-JDBC（推荐Java栈）、Sharding-Proxy、Sharding-Sidecar
-
-
-
-## MyCat
-
-
-
-### Canal
-
-mysql-canal-kafka-flink-tidb
+建设中

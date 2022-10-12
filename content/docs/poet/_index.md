@@ -1,7 +1,7 @@
 ---
 weight: 10
 bookFlatSection: true
-title: "服务端技术"
+title: "Server Side"
 ---
 
 # 简介

@@ -3,15 +3,9 @@ weight: 1
 title: Hystrix
 ---
 
-## Hystrix
+# Hystrix
 
-### 使用方式
-
-所有对外发起调用的地方，client配置在类上进行降级，直接返回错误或统一的服务繁忙，请稍候再试
-
-### 断路器原理
-
-通过断路器实现，基于滚筒式统计，每秒一个桶，默认10个桶（10s）一个统计周期，统计每个桶内调用成功和失败次数来决定是否打开断路器。一旦打开后每5s进入半开状态放过一个请求，请求成功后关闭断路器。
+## 原理
 
 ### Fall back方式
 
@@ -23,14 +17,36 @@ title: Hystrix
 
 ### 隔离方式
 
-- 线程池隔离：每个任务采用独立的线程，支持排队超时等特性。适合线程数量可控以及调用不了解性能的第三方服务。主要用于服务间调用，数据库访问。
-- 信号量隔离：相同任务使用同一线程，不支持排队超时等特性。适合高扇出的场景和高性能的内部应用。主要用于网关和缓存。
+- 线程池隔离：每种任务采用独立的线程池执行。支持异步调用、排队、超时等特性。适合线程数量可控以及远程调用第三方服务时。常用于服务间调用，数据库访问。
+- 信号量隔离：每种任务使用信号量限制最大并发量。不支持异步调用、排队、超时等特性。适合高扇出的场景和高性能的内部应用。常用于网关和缓存。
 
-### Turbine
+### 断路器原理
 
-Turbine用于汇总多个Hystrix客户端提供的stream信息。
+基于滚筒式统计，每秒一个桶，默认10个桶（10s）一个统计周期。统计每个桶内调用成功和失败次数来决定是否打开断路器。一旦打开后每5s进入半开状态放过一个请求，如果该请求成功返回则关闭断路器。
 
-### 生产实践
+## 使用方法
+
+集成在所有对外发起调用的地方。可以配置在类上进行统一降级，直接返回定制的错误或服务繁忙，请稍候再试等信息。
+
+
+## 高级使用
+
+### DashBoard使用
+
+集成Hystrix的客户端应用通过提供stream供Hystrix DashBoard进行展示。
+
+服务大盘
+
+![image](/images/tolerance/turbine3.png)
+
+指标说明
+
+![image](/images/tolerance/turbine4.png)
+
+
+## Turbine
+
+用于汇总多个Hystrix客户端提供的stream信息。
 
 对接Eureka
 
@@ -41,12 +57,3 @@ Turbine用于汇总多个Hystrix客户端提供的stream信息。
 ![image](/images/tolerance/turbine2.png)
 
 
-
-### DashBoard使用
-
-![image](/images/tolerance/turbine3.png)
-
-![image](/images/tolerance/turbine3.png)
-
-
-![image](https://mmbiz.qpic.cn/mmbiz_png/AAQtmjCc74DicxEpwtEX1UrBMld6XA3nHrp3f3oRiauwX9CJ868hIK7kNUYFCXL5iberyd5lz7cd5jFWwjdxxrWmQ/640?wx_fmt=png&wxfrom=5&wx_lazy=1&wx_co=1)

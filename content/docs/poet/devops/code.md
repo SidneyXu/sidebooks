@@ -22,16 +22,17 @@ title: 代码管理
 3. 将开发分支合并到发布分支上
 4. 上线后，将发布分支合并到主干，添加标签，删除发布分支和开发分支
 
-## 代码检查
+## 代码质量
 
-CheckStyle、FindBugs、Sonar
-
-### 代码质量
-
-- 代码规约；规范必要注释，用于梳理思维；IDE Format，持续集成Checkstyle、FindBugs；复杂逻辑工具类单元测试；
-- 给予思考时间不随便压缩工期；Review代码；
+如何保证代码质量？
+- 设立代码规约；规范必要注释；
+- 持续集成，代码合并前执行IDE Format、Checkstyle、FindBugs；
+- 对复杂逻辑进行单元测试；
+- Review代码和结对编程；
+- 给予系统设计和思考时间，不随意压缩工期；
 
 ## 持续集成
 
-- 持续集成
-- jenkins+snoarqube+nexus
+- Jenkins：CI工具，实现自动打包。
+- Snoarqube：代码质量平台。
+- Nexus：代码库。

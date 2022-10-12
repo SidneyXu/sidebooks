@@ -3,13 +3,18 @@ weight: 1
 title: 压力测试
 ---
 
-# 性能检测工具
+# 压力测试
 
-## 压力测试
+## 常用工具一览
 
-### Apache的ab工具
+- Apache的ab。注意Mac自带的有并发数量限制，需要重新编译。
+- 基于Java编写的JMeter
+- 基于Scala编程的Gatling
+- 手写Python
 
-主要看95%和99%分位的响应，另外mac默认的ab有BUG。
+## Apache的ab工具
+
+使用方法
 
 ```shell
 ab -n <请求数> -c <并发数> <url>
@@ -84,29 +89,14 @@ Percentage of the requests served within a certain time (ms)
 
 ```
 
+参数说明
+
 - Requests per second：吞吐率，指某个并发用户数下单位时间内处理的请求数；
 - Time per request：上面的是用户平均请求等待时间，指处理完成所有请求数所花费的时间 /（总请求数 / 并发用户数）；
 - Time per request：下面的是服务器平均请求处理时间，指处理完成所有请求数所花费的时间 / 总请求数；
 - Percentage of the requests served within a certain time：每秒请求时间分布情况，指在整个请求中，每个请求的时间长度的分布情况，例如有 50% 的请求响应在 8ms 内，66% 的请求响应在 10ms 内，说明有 16% 的请求在 8ms~10ms 之间。
 
-### Gatling
+## Gatling
 
-## 堆内存监测
-
-### jmap
-
-查看堆信息。
-
-```shell
-jmap -heap <pid>
-```
-
-导出堆信息，导出后的文件可以放入MAT来查看。
-
-```shell
-jmap -dump:format=b,file=<hprof_filename> <pid>
-```
-
-<img src="/Users/sidneyxu/dev/bitbucket/cafe/Side Project/capture/8、性能故障测试方法/image-20220803211312595.png" alt="image-20220803211312595" style="zoom: 50%;" />
-
+建设中
 

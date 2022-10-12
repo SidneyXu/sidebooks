@@ -8,6 +8,14 @@ bookCollapseSection: true
 
 ## 知识点
 
+### 通用
+
+- 常见服务器
+  + Tomcat
+  + Jetty
+  + undertow
+
+
 ### Tomcat
 
 - 何时修改连接数
@@ -15,11 +23,15 @@ bookCollapseSection: true
 
 ## 最佳实践
 
+### Tomcat
+
+Tomcat仅承担服务器的功能，单Tomcat单服务，虚拟主机功能由Nginx提供。
+
 Tomcat配置
 
-```yml
+```
 # NIO
-## 最大连接数，超过的请求会进入队列，默认值为10000，应大于acceptCount+maxThreads。
+## 最大连接数，超过的请求会进入队列，默认值为10000，该值应大于acceptCount+maxThreads。
 max-connection: 8192
 ## 最大线程数，默认值200。
 max-threads: 150-200
@@ -30,10 +42,4 @@ min-spare-threads: 50-100
 ## 连接超时时间，默认值20。
 connection-timeout: 10s
 ```
-
-## Tomcat
-
-
-
-## Jetty
 

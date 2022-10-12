@@ -4,6 +4,8 @@ title: 任务调度
 bookCollapseSection: true
 ---
 
+# 任务调度
+
 ## 知识点
 
 
@@ -12,7 +14,6 @@ bookCollapseSection: true
 
 XXL-JOB
 
-- 高可用
-  - 调度中心通过Nginx负载均衡
-  - Nginx结合keepalived
+- HA
+  - 调度中心部署多个，通过Nginx的负载均衡机制实现HA。
 

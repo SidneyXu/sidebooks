@@ -1,6 +1,13 @@
-## Sentinel
+---
+weight: 2
+title: Sentinel
+---
 
-得物配置的熔断规则
+# Sentinel
+
+## 生产实例
+
+得物的熔断规则配置
 
 ![image](/images/tolerance/sentinel1.png)
 

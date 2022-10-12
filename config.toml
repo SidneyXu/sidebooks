@@ -6,9 +6,9 @@ googleAnalytics = "UA-66541663-1"
 # all pages.
 # disqusShortname = "my-site"
 
-baseURL = 'http://coffee.bookislife.com/sidebooks'
-languageCode = 'en-us'
-title = '编程之诗'
+baseURL = 'http://coffee.bookislife.com'
+languageCode = 'zh-cn'
+title = 'XuのCoffeeTime'
 
 # (Optional) Set this to true if you use capital letters in file names
 disablePathToLower = true
@@ -60,7 +60,7 @@ path = 'hugo-book1'
   # (Optional, default January 2, 2006) Configure the date format used on the pages
   # - In git information
   # - In blog posts
-  BookDateFormat = 'Jan 2, 2006'
+  BookDateFormat = '2006/1/2'
 
   # (Optional, default true) Enables search function with flexsearch,
   # Index is built on fly, therefore it might slowdown your website.
@@ -84,4 +84,4 @@ path = 'hugo-book1'
   BookServiceWorker = true
 
   flagcounter = "1fWDHae"
-  baiduAnalytics = "1dcca96f408870b7c0b33bb3ad210577"
+  baiduAnalytics = "f7c70ca4854bee700a5a259daccd7062"

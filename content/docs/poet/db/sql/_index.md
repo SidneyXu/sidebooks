@@ -7,68 +7,50 @@ title: 关系型数据库
 
 ## 知识点
 
-MySQL
-
-- 优化手段
-
-  - 优化SQL语句。
-
-    - 基于搜索条件添加合适的索引。
-    - 只在索引上排序。
-    - 加缓存。
-    - 分表分库。
-    - 避免空值判断。
-    - 控制表的字段数量，默认小于16全排序，大小16为rowId排序。
-    - 小事务。
-    - select + 必要字段。
-    - 当只要一行数据时使用LIMIT 1。MySQL数据库引擎会在查找到一条数据后停止搜索，而不是继续往后查询下一条符合条件的数据记录。
-
-  - 增加buffer_pool的大小到物理内存的60%-80%。
-
-  - 增加buffer_pool实例的个数。
-
-  - 根据读写性能调整io_threads的个数。
-
-  - 增加change_buffer的大小。
-
-  - 增加redo log buffer的大小，会增加丢数据的风险。
-
-  - 增加binlog在page cache上的保存次数，会增加丢数据的风险。
-
-  - 调整脏页的刷盘速度，使其符合磁盘IOPS。
-
-    
+建设中
 
 ## 最佳实践
 
-- 索引创建
-  - 列的区别度越高索引收益越大。查看区分度的方法为 `SELECT COUNT(DISTINCT col_name)/COUNT(*) FROM table_name`。
-  - 在单个索引就能实现查询效果的同时，也可以再建一个联合索引来实现覆盖索引，以便提高查询性能。
-- SQL语句
-  - 先写insert语句，再写影响并发度的update语句；因为行锁虽然只在必要时才会加上，但是在事务结束时才会被释放。
-  - count操作优先使用`count(*)`。`count(*)`有优化，不需要写入1后统计1的数量。
+### MySQL
+
+- 什么情况下该创建索引
+  - 列的区别度越高索引收益越大。
+    + 查看区分度的方法： `SELECT COUNT(DISTINCT col_name)/COUNT(*) FROM table_name`。
+  - 在单个索引就能实现查询效果的时候，也可以再建一个联合索引，通过实现覆盖索引和索引下推来提高查询性能。
+- MySQL配置优化
+  + 增加buffer_pool的大小到物理内存的60%-80%。
+  - 增加buffer_pool实例的个数。
+  - 根据读写性能调整io_threads的个数。
+  - 增加change_buffer的大小。
+  - 增加redo log buffer的大小，可能会增加丢数据的风险。
+  - 磁盘TB级别，将redo log设为4个文件，每个1GB。
+  - 增加binlog在page cache上的保存次数，可能会增加丢数据的风险。
+  - 调整脏页的刷盘速度，使其符合磁盘IOPS。
+    + IOPS测试方法：`fio -filename=$filename -direct=1 -iodepth 1 -thread -rw=randrw -ioengine=psync -bs=16k -size=500M -numjobs=10 -runtime=10 -group_reporting -name=mytest`
+- CRUD性能优化
+  * 架构级别
+    - 数据库前放置缓存。
+    - 分表分库。
+    - 读写分离。
+  * 表级别
+    - 控制表的字段数量，默认情况下小于16全排序，大小16为rowId排序。
+    - 控制字段大小。
+    - 基于搜索条件和排序条件创建索引。
+    - 只在索引上排序。
+    - 普通索引优于唯一索引。
+    - 时间和金钱可以考虑使用int和long。
+  * SQL级别
+    - 查询条件避免使用空值判断。
+    - 小事务。
+    - select + 具体字段。
+    - 只要一行数据时使用LIMIT 1。MySQL数据库引擎会在查找到一条数据后停止搜索，而不是继续往后查询下一条符合条件的数据记录。
+    - 事务内既有insert也有update时优先编写insert语句。行锁虽然只在必要时才会加上，但是在事务结束时才会被释放，将update语句放最后可以减少并发竞争。
+    + `count(*)`。`count(*)`有优化，`count(1)`是每行记录返回1后统计1的数量。
 
 
-Oracle Client
+MySQL Server 配置
 
-```yml
-loginTimeout=3000
-checkoutTimeout=30000
-preferredTestQuery=select 1 from dual
-idleConnectionTestPeriod=10000
-testConnectionOnCheckout=true
-minPoolSize=5
-maxPoolSize=15
-initialPoolSize=1
-acquireIncrement=1
-acquireRetryAttempt=30
-acquireRetryDelay=1000
-maxIdleTime=25000
 ```
-
-MySQL Server
-
-```yml
 # 连接数
 ## 服务器响应的最大连接数值（Max_used_connections）占服务器上限连接数值（max_connections）的比例值在10%以上，理想85%。5.7版本中默认是151， 最大可以达到16384。
 ## 如果只有一台服务器，且Tomcat设置的最大线程池缺省值200，假设每个线程会用到一个数据库连接，那么线程池大小应该小于等于200。
@@ -127,18 +109,38 @@ rpl_semi_sync_master_wait_slave_count
 rpl_semi_sync_master_wait_point
 ```
 
-磁盘TB级别，则将redo log设为4个文件，每个1GB。
 
-磁盘IOPS测试
-
-```shell
-fio -filename=$filename -direct=1 -iodepth 1 -thread -rw=randrw -ioengine=psync -bs=16k -size=500M -numjobs=10 -runtime=10 -group_reporting -name=mytest
-```
-
-Java Client
+MySQL Client配置
 
 ```yml
-对于数据库连接池，根据我的经验，一般在线上我建议最小连接数控制在 10 左右，最大连接数控制在 20～30 左右即可。
+spring:
+  datasource:
+    # 数据库连接池
+    ## Spring默认的hikari速度最快
+    ## 阿里的druid支持监控，功能更丰富，但监控可以由专门的监控系统负责
+    hikari:
+      # 最大连接数，默认为10，一般设置在20-30左右。
+      maximum-pool-size: 20
 ```
 
-## 
+
+### Oracle
+
+Oracle Client 配置
+
+```
+loginTimeout=3000
+checkoutTimeout=30000
+preferredTestQuery=select 1 from dual
+idleConnectionTestPeriod=10000
+testConnectionOnCheckout=true
+minPoolSize=5
+maxPoolSize=15
+initialPoolSize=1
+acquireIncrement=1
+acquireRetryAttempt=30
+acquireRetryDelay=1000
+maxIdleTime=25000
+```
+
+

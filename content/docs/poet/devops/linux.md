@@ -5,38 +5,25 @@ title: Linux
 
 # Linux
 
-#### 网络请求分析
-
-tcpdump
-
-#### 上下文切换监控
-
-- vnstat
-- pidstat
-
-以上两者都属于sysstat包，MAC不可用。
-
-- wireshark：事件记录形式
-
-- tcpdump
-
-#### CPU相关
+## CPU工具
 
 top 
 
-按CPU利用率排序，按q退出交互
+按CPU利用率排序，按q退出交互界面
 
 ```shell
 top -o cpu
 ```
 
-## 内存相关
+## 内存工具
 
 vmstat
 
 ```shell
 vmstat <interval> <count>
 ```
+
+输出结果：
 
 ![image](/images/devops/linux1.png)
 
@@ -51,13 +38,18 @@ vmstat <interval> <count>
 - id：CPU空闲时间占比
 - wa：等待I/O的CPU时间占比；过高证明瓶颈在I/O而不是CPU资源；
 
-## 网络相关
+## 网络工具
 
-netstat
+- netstat
+- tcpdump
 
+## 上下文工具
 
+- vnstat：需集成sysstat包，MAC平台不可用。
+- pidstat：需集成sysstat包，MAC平台不可用。
+- wireshark：事件记录形式
 
-## 磁盘相关
+## 磁盘工具
 
 iostat
 
@@ -68,7 +60,6 @@ iostat <interval> <count>
 -tx 报告每秒向终端读取和写入的字符数和CPU的详细信息
 
 ![image](/images/devops/linux2.png)
-
 
 - %user：CPU处在用户模式下的时间百分比。
 - %nice：CPU处在带NICE值的用户模式下的时间百分比。
@@ -83,22 +74,17 @@ iostat <interval> <count>
 
 ## sar
 
-### 基本概念
-
-需安装sysstat包。查看使用方法如下：
-
-```shell
-man sar
-```
+通用工具包，需要先安装sysstat包。
 
 ### 查看CPU利用率
 
-注意这里的CPU信息指向虚拟CPU，而不是物理机上的核数
+注意这里的CPU信息指虚拟CPU，不是物理机上的核数。
 
 ```shell
 sar -u <interval> <count>
 ```
 
+输出结果
 ![image](/images/devops/linux3.png)
 
 - %user 用户级别CPU时间占比。
@@ -112,6 +98,7 @@ sar -u <interval> <count>
 sar -q <interval> <count>
 ```
 
+输出结果
 ![image](/images/devops/linux4.png)
 
 - runq-sz 运行队列的长度。
@@ -124,6 +111,7 @@ sar -q <interval> <count>
 sar -r <interval> <count>
 ```
 
+输出结果
 ![image](/images/devops/linux5.png)
 
 - kbmemfree：空闲的物理内存大小
@@ -136,6 +124,7 @@ sar -r <interval> <count>
 sar -b  <interval> <count>
 ```
 
+输出结果
 ![image](/images/devops/linux6.png)
 
 - tps：磁盘每秒I/O数量
@@ -150,6 +139,7 @@ sar -b  <interval> <count>
 sar -p -d <interval> <count>
 ```
 
+输出结果
 ![image](/images/devops/linux7.png)
 
 - tps：每秒I/O的传输总数
