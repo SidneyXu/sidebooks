@@ -5,6 +5,39 @@ title: CPU和线程的分析
 
 # CPU和线程的分析
 
+## top
+
+top命令可以用来找出使CPU飙到100%的罪归祸首。
+
+1、使用 `top` 命令查看进程列表
+
+![alt](/images/test/top1.png)
+
+以上输出结果中PID=382的进程占用CPU最高。
+
+2、使用 `top -Hp <pid>` 查看进程内部的线程运行状态
+
+![alt](/images/test/top2.png)
+
+以上输出结果中PID=405的线程最为忙碌。
+
+3、通过`printf %x <pid>`命令将线程ID转换为Java使用的16进制ID。
+
+![alt](/images/test/top3.png)
+
+4、然后就可以配合`jstack`命令找到对应的Java线程。
+
+![alt](/images/test/top4.png)
+
+{{< hint info >}}
+为了查找方便，可以结合`grep`命令只返回后几行记录。
+
+```
+jstack <pid> | grep -A <n> <thread_name>
+```
+{{</ hint >}}
+
+
 ## async-profiler
 
 官网：[https://github.com/jvm-profiling-tools/async-profiler](https://github.com/jvm-profiling-tools/async-profiler)

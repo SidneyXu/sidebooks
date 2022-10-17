@@ -5,12 +5,12 @@ title: 压力测试
 
 # 压力测试
 
-## 常用工具一览
+## 工具一览
 
-- Apache的ab。注意Mac自带的有并发数量限制，需要重新编译。
-- 基于Java编写的JMeter
-- 基于Scala编程的Gatling
-- 手写Python
+- ab：Apache包中的测试工具。需要注意Mac自带的ab有并发数量限制，不能用于测试。
+- JMeter：基于Java，可以在GUI界面上操作，无需编程基础。
+- Gatling：基于Scala。
+- locust：基于Python。
 
 ## Apache的ab工具
 
@@ -96,7 +96,15 @@ Percentage of the requests served within a certain time (ms)
 - Time per request：下面的是服务器平均请求处理时间，指处理完成所有请求数所花费的时间 / 总请求数；
 - Percentage of the requests served within a certain time：每秒请求时间分布情况，指在整个请求中，每个请求的时间长度的分布情况，例如有 50% 的请求响应在 8ms 内，66% 的请求响应在 10ms 内，说明有 16% 的请求在 8ms~10ms 之间。
 
+## JMeter
+
+官网：[https://jmeter.apache.org/](https://jmeter.apache.org/)
+
 ## Gatling
 
-建设中
+官网：[http://gatling.io/](http://gatling.io/)
+
+## locust
+
+官网：[https://locust.io/](https://locust.io/)
 
