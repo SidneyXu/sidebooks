@@ -105,7 +105,12 @@ ul.pagination {
     padding: $padding-16;
     background: var(--body-background);
 
-    @include fixed;
+    // TODO 解除窗口固定
+    //@include fixed;
+      top: 0;
+  bottom: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   }
 
   a,
